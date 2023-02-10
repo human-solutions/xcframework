@@ -1,0 +1,13 @@
+[workspace]
+
+[package]
+name = "cargo-xcframework"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[package.metadata.xcframework]
+headers-directory = "tests/project"
+iOS = true
