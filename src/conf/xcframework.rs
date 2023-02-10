@@ -21,6 +21,15 @@ pub enum LibType {
     CDyLib,
 }
 
+impl LibType {
+    pub fn file_ending(&self) -> &'static str {
+        match self {
+            LibType::StaticLib => "a",
+            LibType::CDyLib => "dylib",
+        }
+    }
+}
+
 #[derive(Deserialize, Debug, Default)]
 #[serde(rename_all = "kebab-case")]
 pub struct XCFrameworkConfiguration {
@@ -63,6 +72,20 @@ fn iOS_sim_targets() -> Vec<Triple> {
 }
 
 impl XCFrameworkConfiguration {
+    pub fn chosen_targets(&self) -> Vec<&Triple> {
+        let mut all = vec![];
+        if self.macOS {
+            all.extend(self.macOS_targets.iter());
+        }
+        if self.iOS {
+            all.extend(self.iOS_targets.iter());
+            if self.simulators {
+                all.extend(self.iOS_simulator_targets.iter());
+            }
+        }
+        all
+    }
+
     pub fn parse(metadata: &serde_json::Value) -> Result<Self> {
         if let Some(xcfr) = metadata.get("xcframework") {
             Self::parse_xcframework(xcfr)

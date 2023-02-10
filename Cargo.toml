@@ -18,5 +18,7 @@ fs-err = "2.9"
 target-lexicon = { git = "https://github.com/akesson/target-lexicon.git", features = [
   "serde",
 ] }
-rustup-target = { git = "https://github.com/akesson/rustup-target.git" }
+# rustup-target = { git = "https://github.com/akesson/rustup-target.git" }
+rustup-target = { path = "../rustup-target" }
 lazy_static = "1.4"
+dialoguer = "0.10"
