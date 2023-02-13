@@ -7,11 +7,15 @@ use super::{LibType, XCFrameworkConfiguration};
 
 #[derive(Debug)]
 pub struct Configuration {
+    /// The root dir of the project
     pub dir: Utf8PathBuf,
     pub cargo_section: XCFrameworkConfiguration,
     pub cli: Cli,
     pub lib_type: LibType,
     pub lib_name: String,
+    /// Directory for all generated artifacts
+    pub target_dir: Utf8PathBuf,
+    /// Directory where the xcframework will be built
     pub build_dir: Utf8PathBuf,
 }
 
@@ -24,6 +28,14 @@ impl Configuration {
         let mut dir = manifest_path.clone();
         dir.pop();
 
+        let target_dir = dir.join(
+            cli.target_dir
+                .clone()
+                .unwrap_or_else(|| Utf8PathBuf::from("target")),
+        );
+        let build_dir = target_dir.join("xcframework");
+
+        println!("target_dir: {:?}", target_dir);
         let metadata = MetadataCommand::new().manifest_path(manifest_path).exec()?;
 
         let Some(package) = metadata.root_package() else {
@@ -60,12 +72,13 @@ impl Configuration {
         };
 
         Ok(Self {
-            dir: dir.clone(),
+            dir,
             cargo_section: xc_conf,
             cli,
             lib_type,
             lib_name: target.name.clone(),
-            build_dir: dir.join("target").join("xcframework"),
+            target_dir,
+            build_dir,
         })
     }
 

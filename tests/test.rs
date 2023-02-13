@@ -3,11 +3,13 @@ use std::process::Command;
 use camino::Utf8PathBuf;
 use cargo_xcframework::Cli;
 use clap::Parser;
+use tempfile::tempdir;
 
 #[test]
 fn test_hello() {
     let cli = Cli::parse_from(&[
         "cargo-xcframework",
+        "--quiet",
         "--manifest-path=tests/project/Cargo.toml",
     ]);
 
@@ -17,10 +19,16 @@ fn test_hello() {
 
 #[test]
 fn end_to_end_static() {
+    let tmp = tempdir().unwrap();
+    let tmp_dir = tmp.path().to_str().unwrap();
+
     let cli = Cli::parse_from(&[
         "cargo-xcframework",
+        "--quiet",
         "--manifest-path=examples/end-to-end/mymath-lib/Cargo.toml",
         "--lib-type=staticlib",
+        "--target-dir",
+        tmp_dir,
     ]);
 
     cargo_xcframework::run(cli).unwrap();
@@ -44,10 +52,16 @@ fn end_to_end_static() {
 
 #[test]
 fn end_to_end_dynamic() {
+    let tmp = tempdir().unwrap();
+    let tmp_dir = tmp.path().to_str().unwrap();
+
     let cli = Cli::parse_from(&[
         "cargo-xcframework",
+        "--quiet",
         "--manifest-path=examples/end-to-end/mymath-lib/Cargo.toml",
         "--lib-type=cdylib",
+        "--target-dir",
+        tmp_dir,
     ]);
 
     cargo_xcframework::run(cli).unwrap();

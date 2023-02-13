@@ -4,7 +4,7 @@ mod ext;
 
 use crate::conf::Configuration;
 use anyhow::Result;
-use cmd::{cargo, lipo, targets, xcodebuild};
+use cmd::{cargo, lipo, rustup, xcodebuild};
 pub use conf::Cli;
 
 pub fn run(cli: Cli) -> Result<()> {
@@ -15,7 +15,7 @@ pub fn run(cli: Cli) -> Result<()> {
     }
     fs_err::create_dir_all(&conf.build_dir)?;
 
-    targets::check_needed(&conf)?;
+    rustup::check_needed(&conf)?;
     cargo::build(&conf)?;
 
     let libs = lipo::assemble_libs(&conf)?;

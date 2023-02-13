@@ -22,3 +22,6 @@ target-lexicon = { git = "https://github.com/akesson/target-lexicon.git", featur
 rustup-target = { path = "../rustup-target" }
 lazy_static = "1.4"
 dialoguer = "0.10"
+
+[dev-dependencies]
+tempfile = "3.3"

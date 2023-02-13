@@ -43,6 +43,10 @@ pub struct Cli {
     #[arg(long)]
     pub no_default_features: bool,
 
+    /// Directory for all generated artifacts
+    #[arg(long, value_name = "DIRECTORY")]
+    pub target_dir: Option<Utf8PathBuf>,
+
     /// Path to Cargo.toml.
     #[arg(long, value_name = "PATH")]
     pub manifest_path: Option<Utf8PathBuf>,
