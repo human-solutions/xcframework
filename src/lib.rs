@@ -5,7 +5,7 @@ mod ext;
 use crate::conf::Configuration;
 use anyhow::Result;
 use cmd::{cargo, lipo, rustup, xcodebuild};
-pub use conf::Cli;
+pub use conf::{Cli, XCFrameworkConfiguration};
 
 pub fn run(cli: Cli) -> Result<()> {
     let conf = Configuration::load(cli)?;
