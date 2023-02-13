@@ -35,7 +35,7 @@ impl LibType {
 #[serde(rename_all = "kebab-case")]
 pub struct XCFrameworkConfiguration {
     /// The headers include directory
-    pub headers_directory: Utf8PathBuf,
+    pub headers_dir: Utf8PathBuf,
 
     /// The library type (staticlib or cdylib)
     /// only necessary if the package lib target defines both
@@ -100,16 +100,13 @@ impl XCFrameworkConfiguration {
 
     fn parse_xcframework(xcfr: &serde_json::Value, dir: &Utf8Path) -> Result<Self> {
         let mut me = serde_json::from_value::<Self>(xcfr.clone())?;
-        me.headers_directory = dir.join(me.headers_directory);
+        me.headers_dir = dir.join(me.headers_dir);
         me.validated()
     }
 
     fn validated(self) -> Result<Self> {
-        if !self.headers_directory.exists() {
-            bail!(
-                "The headers-directory '{}' does not exist",
-                self.headers_directory
-            );
+        if !self.headers_dir.exists() {
+            bail!("The headers-dir '{}' does not exist", self.headers_dir);
         }
 
         if !self.iOS && !self.macOS {

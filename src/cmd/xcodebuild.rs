@@ -8,7 +8,7 @@ pub fn assemble(conf: &Configuration, libs: Vec<String>) -> Result<()> {
         args.push("-library".into());
         args.push(lib.into());
         args.push("-headers".into());
-        args.push(conf.cargo_section.headers_directory.to_string());
+        args.push(conf.cargo_section.headers_dir.to_string());
     }
 
     let name = &conf.lib_name;
