@@ -1,10 +1,16 @@
 use camino::Utf8PathBuf;
 use clap::Parser;
 
+use super::LibType;
+
 /// Compile a package into a cross-platform Apple XCFramework
 #[derive(Debug, Parser)]
 #[clap(version)]
 pub struct Cli {
+    /// Chose library type to build when Cargo.toml `crate-type` has both.
+    #[arg(long)]
+    pub lib_type: Option<LibType>,
+
     /// Do not print cargo log messages
     #[arg(short, long)]
     pub quiet: bool,
@@ -36,6 +42,10 @@ pub struct Cli {
     /// Do not activate the `default` feature
     #[arg(long)]
     pub no_default_features: bool,
+
+    /// Directory for all generated artifacts
+    #[arg(long, value_name = "DIRECTORY")]
+    pub target_dir: Option<Utf8PathBuf>,
 
     /// Path to Cargo.toml.
     #[arg(long, value_name = "PATH")]

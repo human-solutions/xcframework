@@ -31,31 +31,35 @@ fn join_or_copy(conf: &Configuration, targets: &[Triple], name: &str) -> Result<
 
 fn lipo_join(conf: &Configuration, targets: &[Triple], name_ext: &str) -> Result<String> {
     let profile = conf.cli.profile.as_deref().unwrap_or("debug");
-    let dir = &conf.build_dir;
+    let target_dir = &conf.target_dir;
+    let build_dir = &conf.build_dir;
     let name = &conf.lib_name.replace('-', "_");
     let ending = conf.lib_type.file_ending();
 
     let mut args = vec!["-create".to_string()];
     for target in targets {
-        args.push(format!("target/{target}/{profile}/lib{name}.{ending}"));
+        args.push(format!(
+            "{target_dir}/{target}/{profile}/lib{name}.{ending}"
+        ));
     }
 
     args.push("-output".into());
-    let out = format!("{dir}/libs/lib{name}_{name_ext}.{ending}");
+    let out = format!("{build_dir}/libs/lib{name}_{name_ext}.{ending}");
     args.push(out.clone());
 
-    super::run("lipo", &args)?;
+    super::run("lipo", &args, conf.cli.quiet)?;
     Ok(out)
 }
 
 fn single_copy(conf: &Configuration, target: &Triple, name_ext: &str) -> Result<String> {
     let profile = conf.profile();
     let ending = conf.lib_type.file_ending();
-    let dir = &conf.build_dir;
+    let target_dir = &conf.target_dir;
+    let build_dir = &conf.build_dir;
     let name = &conf.lib_name.replace('-', "_");
 
-    let src = format!("target/{target}/{profile}/lib{name}.{ending}",);
-    let dest = format!("{dir}/libs/lib{name}_{name_ext}.{ending}");
+    let src = format!("{target_dir}/{target}/{profile}/lib{name}.{ending}",);
+    let dest = format!("{build_dir}/libs/lib{name}_{name_ext}.{ending}");
     fs_err::copy(src, &dest)?;
     Ok(dest)
 }

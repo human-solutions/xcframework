@@ -18,6 +18,6 @@ pub fn assemble(conf: &Configuration, libs: Vec<String>) -> Result<()> {
     args.push("-output".into());
     args.push(out.clone());
 
-    super::run("xcodebuild", &args)?;
+    super::run("xcodebuild", &args, conf.cli.quiet)?;
     Ok(())
 }
