@@ -7,6 +7,9 @@ pub fn build(conf: &Configuration) -> Result<()> {
 
     args.push("build".into());
 
+    if let Some(manifest_path) = &conf.cli.manifest_path {
+        args.push(format!("--manifest-path={manifest_path}"));
+    }
     if conf.cli.quiet {
         args.push("--quiet".into());
     }

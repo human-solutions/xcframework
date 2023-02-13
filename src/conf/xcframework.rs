@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 
 use anyhow::{bail, Context, Result};
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 use serde::Deserialize;
 use std::str::FromStr;
 use target_lexicon::{triple, OperatingSystem, Triple};
@@ -14,7 +14,8 @@ lazy_static::lazy_static! {
     static ref MACOS_DEFAULT: Vec<Triple> = vec![triple!("x86_64-apple-darwin"), triple!("aarch64-apple-darwin")];
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone, clap::ValueEnum)]
+#[clap(rename_all = "lower")]
 #[serde(rename_all = "lowercase")]
 pub enum LibType {
     StaticLib,
@@ -86,17 +87,21 @@ impl XCFrameworkConfiguration {
         all
     }
 
-    pub fn parse(metadata: &serde_json::Value) -> Result<Self> {
+    /// Parses the [package.metadata.xcframework] section of the Cargo.toml
+    /// and updates the headers_directory to be relative to current working directory
+    pub fn parse(metadata: &serde_json::Value, dir: &Utf8Path) -> Result<Self> {
         if let Some(xcfr) = metadata.get("xcframework") {
-            Self::parse_xcframework(xcfr)
+            Self::parse_xcframework(xcfr, dir)
                 .context("Error in Cargo.toml section [package.metadata.xcframework]")
         } else {
             bail!("Missing [package.metadata.xcframework] section in Cargo.toml");
         }
     }
 
-    fn parse_xcframework(xcfr: &serde_json::Value) -> Result<Self> {
-        serde_json::from_value::<Self>(xcfr.clone())?.validated()
+    fn parse_xcframework(xcfr: &serde_json::Value, dir: &Utf8Path) -> Result<Self> {
+        let mut me = serde_json::from_value::<Self>(xcfr.clone())?;
+        me.headers_directory = dir.join(me.headers_directory);
+        me.validated()
     }
 
     fn validated(self) -> Result<Self> {

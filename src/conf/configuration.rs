@@ -17,7 +17,15 @@ pub struct Configuration {
 
 impl Configuration {
     pub fn load(cli: Cli) -> Result<Self> {
-        let metadata = MetadataCommand::new().manifest_path("Cargo.toml").exec()?;
+        let manifest_path = cli
+            .manifest_path
+            .clone()
+            .unwrap_or_else(|| Utf8PathBuf::from("Cargo.toml"));
+        let mut dir = manifest_path.clone();
+        dir.pop();
+
+        let metadata = MetadataCommand::new().manifest_path(manifest_path).exec()?;
+
         let Some(package) = metadata.root_package() else {
             anyhow::bail!("Could not find root package in metadata");
         };
@@ -26,38 +34,38 @@ impl Configuration {
             t.kind.contains(&"staticlib".to_string()) || t.kind.contains(&"staticlib".to_string())
         });
         let dylib = package.targets.iter().find(|t| {
-            t.kind.contains(&"cdylib".to_string()) || t.kind.contains(&"staticlib".to_string())
+            t.kind.contains(&"cdylib".to_string()) || t.kind.contains(&"cdylib".to_string())
         });
 
-        let xc_conf = XCFrameworkConfiguration::parse(&package.metadata)?;
+        let xc_conf = XCFrameworkConfiguration::parse(&package.metadata, &dir)?;
+
+        let wanted_lib_type = cli.lib_type.clone().or_else(|| xc_conf.lib_type.clone());
 
         use LibType::*;
-        let (lib_type, target) = match (staticlib, dylib, &xc_conf.lib_type) {
+        let (lib_type, target) = match (staticlib, dylib, wanted_lib_type) {
             (Some(staticlib), None, None) => (StaticLib, staticlib),
-            (Some(staticlib), None, Some(StaticLib)) => (StaticLib, staticlib),
+            (Some(staticlib), _, Some(StaticLib)) => (StaticLib, staticlib),
             (Some(_staticlib), None, Some(CDyLib)) => {
-                bail!("please set '[lib] crate-type = \"cdylib\"' in Cargo.toml")
+                bail!("please add 'cdylib' to '[lib] crate-type' in Cargo.toml")
             }
             (None, Some(dylib), None) => (CDyLib, dylib),
             (_, Some(dylib), Some(CDyLib)) => (CDyLib, dylib),
             (_, Some(_dylib), Some(StaticLib)) => {
-                bail!("please set '[lib] crate-type = \"staticlib\"' in Cargo.toml")
+                bail!("please add 'staticlib' to '[lib] crate-type' in Cargo.toml")
             }
             (Some(_), Some(_), None) => {
-                bail!("please set '[package.metadata.xcframework] lib-type' in Cargo.toml")
+                bail!("please set '[package.metadata.xcframework] crate-type' in Cargo.toml")
             }
             (None, None, _) => bail!("missing '[lib] crate-type' in Cargo.toml"),
         };
-        let mut dir = package.manifest_path.clone();
-        dir.pop();
 
         Ok(Self {
-            dir,
+            dir: dir.clone(),
             cargo_section: xc_conf,
             cli,
             lib_type,
             lib_name: target.name.clone(),
-            build_dir: Utf8PathBuf::from("target").join("xcframework"),
+            build_dir: dir.join("target").join("xcframework"),
         })
     }
 

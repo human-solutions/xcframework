@@ -8,12 +8,6 @@ use cmd::{cargo, lipo, targets, xcodebuild};
 pub use conf::Cli;
 
 pub fn run(cli: Cli) -> Result<()> {
-    if let Some(manifest_path) = &cli.manifest_path {
-        if let Some(working_dir) = manifest_path.parent() {
-            println!("cd {}", working_dir);
-            std::env::set_current_dir(working_dir)?;
-        }
-    }
     let conf = Configuration::load(cli)?;
 
     if conf.build_dir.exists() {
@@ -23,6 +17,7 @@ pub fn run(cli: Cli) -> Result<()> {
 
     targets::check_needed(&conf)?;
     cargo::build(&conf)?;
+
     let libs = lipo::assemble_libs(&conf)?;
     xcodebuild::assemble(&conf, libs)?;
     Ok(())
