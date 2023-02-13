@@ -1,7 +1,7 @@
-mod cli;
 mod configuration;
+mod xc_cli;
 mod xcframework;
 
-pub use cli::Cli;
 pub use configuration::Configuration;
+pub use xc_cli::XcCli;
 pub use xcframework::{LibType, XCFrameworkConfiguration};

@@ -5,9 +5,9 @@ mod ext;
 use crate::conf::Configuration;
 use anyhow::Result;
 use cmd::{cargo, lipo, rustup, xcodebuild};
-pub use conf::{Cli, XCFrameworkConfiguration};
+pub use conf::{XCFrameworkConfiguration, XcCli};
 
-pub fn run(cli: Cli) -> Result<()> {
+pub fn run(cli: XcCli) -> Result<()> {
     let conf = Configuration::load(cli)?;
 
     if conf.build_dir.exists() {

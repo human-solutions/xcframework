@@ -1,4 +1,4 @@
-use crate::Cli;
+use crate::XcCli;
 use anyhow::{bail, Result};
 use camino::Utf8PathBuf;
 use cargo_metadata::MetadataCommand;
@@ -10,7 +10,7 @@ pub struct Configuration {
     /// The root dir of the project
     pub dir: Utf8PathBuf,
     pub cargo_section: XCFrameworkConfiguration,
-    pub cli: Cli,
+    pub cli: XcCli,
     pub lib_type: LibType,
     pub lib_name: String,
     /// Directory for all generated artifacts
@@ -20,7 +20,7 @@ pub struct Configuration {
 }
 
 impl Configuration {
-    pub fn load(cli: Cli) -> Result<Self> {
+    pub fn load(cli: XcCli) -> Result<Self> {
         let manifest_path = cli
             .manifest_path
             .clone()
@@ -35,7 +35,6 @@ impl Configuration {
         );
         let build_dir = target_dir.join("xcframework");
 
-        println!("target_dir: {:?}", target_dir);
         let metadata = MetadataCommand::new().manifest_path(manifest_path).exec()?;
 
         let Some(package) = metadata.root_package() else {
