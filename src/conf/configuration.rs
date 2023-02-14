@@ -62,17 +62,17 @@ impl Configuration {
             (Some(staticlib), None, None) => (StaticLib, staticlib),
             (Some(staticlib), _, Some(StaticLib)) => (StaticLib, staticlib),
             (Some(_staticlib), None, Some(CDyLib)) => {
-                bail!("please add 'cdylib' to '[lib] crate-type' in Cargo.toml")
+                bail!("Please add 'cdylib' to '[lib] crate-type' in Cargo.toml")
             }
             (None, Some(dylib), None) => (CDyLib, dylib),
             (_, Some(dylib), Some(CDyLib)) => (CDyLib, dylib),
             (_, Some(_dylib), Some(StaticLib)) => {
-                bail!("please add 'staticlib' to '[lib] crate-type' in Cargo.toml")
+                bail!("Please add 'staticlib' to '[lib] crate-type' in Cargo.toml")
             }
             (Some(_), Some(_), None) => {
-                bail!("please set '[package.metadata.xcframework] crate-type' in Cargo.toml")
+                bail!("Please set '[package.metadata.xcframework] lib-type' in Cargo.toml")
             }
-            (None, None, _) => bail!("missing '[lib] crate-type' in Cargo.toml"),
+            (None, None, _) => bail!("Missing '[lib] crate-type' in Cargo.toml"),
         };
 
         Ok(Self {
