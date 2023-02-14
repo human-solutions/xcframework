@@ -14,7 +14,7 @@ let package = Package(
 				dependencies: ["MyMath"]),
 		.binaryTarget(
 				name: "MyMath",
-				path: "../mymath-lib/target/xcframework/MyMath.xcframework"
+				path: "../mymath-lib/target/MyMath.xcframework.zip"
 		),
 	]
 )

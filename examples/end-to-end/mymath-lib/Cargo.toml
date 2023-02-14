@@ -14,7 +14,6 @@ include-dir = "include"
 iOS = true
 macOS = true
 simulators = true
-zip = false
 
 [profile.release]
 lto = true

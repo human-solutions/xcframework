@@ -3,6 +3,8 @@ use camino::Utf8PathBuf;
 
 pub trait PathBufExt {
     fn resolve_home_dir(self) -> Result<Utf8PathBuf>;
+
+    fn remove_dir_all_if_exists(&self) -> Result<()>;
 }
 
 impl PathBufExt for Utf8PathBuf {
@@ -14,5 +16,12 @@ impl PathBufExt for Utf8PathBuf {
         } else {
             Ok(self)
         }
+    }
+
+    fn remove_dir_all_if_exists(&self) -> Result<()> {
+        if self.exists() {
+            fs_err::remove_dir_all(self)?;
+        }
+        Ok(())
     }
 }

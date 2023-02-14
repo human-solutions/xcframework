@@ -39,15 +39,6 @@ fn end_to_end_static() {
     let swift_dir = cp_swift_exe(&tmp).unwrap();
     cargo_xcframework::run(cli).unwrap();
 
-    // Command::new("ls")
-    //     .arg("-lha")
-    //     .arg("xcframework")
-    //     .current_dir(&target_dir)
-    //     .spawn()
-    //     .unwrap()
-    //     .wait()
-    //     .unwrap();
-
     let cmd = Command::new("swift")
         .current_dir(swift_dir)
         .arg("run")
@@ -99,7 +90,9 @@ fn cp_swift_exe(tmp: &TempDir) -> Result<Utf8PathBuf> {
 
     let build_dir = from.join(".build");
     if build_dir.exists() {
-        fs_err::remove_dir_all(build_dir)?;
+        // Ignore errors because cp_swift_exe is called from several tests
+        // and the build directory may have been deleted by another test.
+        let _ = fs_err::remove_dir_all(build_dir);
     }
 
     let to = Utf8PathBuf::from_path_buf(tmp.path().to_path_buf()).unwrap();

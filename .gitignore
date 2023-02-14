@@ -14,3 +14,6 @@ build/
 .DS_Store
 
 /tests/**/Cargo.lock
+
+*.XCFramework
+*.XCFramework.zip
