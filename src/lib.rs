@@ -4,7 +4,7 @@ mod ext;
 
 use crate::conf::Configuration;
 use anyhow::Result;
-use cmd::{cargo, lipo, rustup, xcodebuild};
+use cmd::{cargo, lipo, rustup, xcodebuild, zip};
 pub use conf::{XCFrameworkConfiguration, XcCli};
 
 pub fn run(cli: XcCli) -> Result<()> {
@@ -20,5 +20,8 @@ pub fn run(cli: XcCli) -> Result<()> {
 
     let libs = lipo::assemble_libs(&conf)?;
     xcodebuild::assemble(&conf, libs)?;
+    if conf.cargo_section.zip {
+        zip::xcframework(&conf)?;
+    }
     Ok(())
 }

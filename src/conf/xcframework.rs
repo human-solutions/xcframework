@@ -41,14 +41,18 @@ pub struct XCFrameworkConfiguration {
     /// only necessary if the package lib target defines both
     pub lib_type: Option<LibType>,
 
-    #[serde(default)]
-    pub simulators: bool,
+    /// Whether to zip the resulting XCFramework
+    #[serde(default = "zip_default")]
+    pub zip: bool,
 
     #[serde(default)]
     pub macOS: bool,
 
     #[serde(default = "macOS_default")]
     pub macOS_targets: Vec<Triple>,
+
+    #[serde(default)]
+    pub simulators: bool,
 
     #[serde(default)]
     pub iOS: bool,
@@ -58,6 +62,10 @@ pub struct XCFrameworkConfiguration {
 
     #[serde(default = "iOS_sim_targets")]
     pub iOS_simulator_targets: Vec<Triple>,
+}
+
+pub fn zip_default() -> bool {
+    true
 }
 
 pub fn macOS_default() -> Vec<Triple> {
