@@ -9,7 +9,7 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [package.metadata.xcframework]
-headers-dir = "src/include"
+include-dir = "src/include"
 iOS = true
 macOS = true
 simulators = true
