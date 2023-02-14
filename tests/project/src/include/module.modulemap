@@ -1,0 +1,5 @@
+
+module HelloTest {
+    header "my_header.h"
+    export *
+}

@@ -14,7 +14,7 @@ fn test_hello() {
     ]);
 
     let res = cargo_xcframework::run(cli);
-    assert!(res.is_ok())
+    res.unwrap()
 }
 
 #[test]

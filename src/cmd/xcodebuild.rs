@@ -11,7 +11,7 @@ pub fn assemble(conf: &Configuration, libs: Vec<String>) -> Result<()> {
         args.push(conf.cargo_section.include_dir.to_string());
     }
 
-    let name = &conf.lib_name;
+    let name = &conf.module_name()?;
     let dir = &conf.build_dir;
 
     let out = format!("{dir}/{name}.xcframework");
