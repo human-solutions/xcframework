@@ -25,7 +25,7 @@ pub struct Configuration {
 }
 
 impl Configuration {
-    pub fn load(cli: XcCli) -> Result<Self> {
+    pub fn load(mut cli: XcCli) -> Result<Self> {
         let manifest_path = cli
             .manifest_path
             .clone()
@@ -74,6 +74,21 @@ impl Configuration {
             }
             (None, None, _) => bail!("Missing '[lib] crate-type' in Cargo.toml"),
         };
+
+        if xc_conf.build_std && lib_type == LibType::StaticLib {
+            let already_set = cli
+                .unstable_flags
+                .as_ref()
+                .map(|f| f.contains("build-std=std"))
+                .unwrap_or(false);
+            if !already_set {
+                if let Some(flag) = cli.unstable_flags.to_owned() {
+                    cli.unstable_flags = Some(format!("{flag},build-std=std"));
+                } else {
+                    cli.unstable_flags = Some("build-std=std".to_string());
+                }
+            }
+        }
 
         Ok(Self {
             dir,

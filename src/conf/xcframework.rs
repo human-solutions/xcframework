@@ -14,7 +14,7 @@ lazy_static::lazy_static! {
     static ref MACOS_DEFAULT: Vec<Triple> = vec![triple!("x86_64-apple-darwin"), triple!("aarch64-apple-darwin")];
 }
 
-#[derive(Deserialize, Debug, Clone, clap::ValueEnum)]
+#[derive(Deserialize, Debug, Clone, clap::ValueEnum, PartialEq, Eq)]
 #[clap(rename_all = "lower")]
 #[serde(rename_all = "lowercase")]
 pub enum LibType {
@@ -44,6 +44,10 @@ pub struct XCFrameworkConfiguration {
     /// Whether to zip the resulting XCFramework
     #[serde(default = "zip_default")]
     pub zip: bool,
+
+    /// Enable Cargo to compile the standard library itself as part of a crate graph compilation.
+    #[serde(default)]
+    pub build_std: bool,
 
     #[serde(default)]
     pub macOS: bool,

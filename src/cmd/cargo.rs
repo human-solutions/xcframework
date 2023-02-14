@@ -26,6 +26,10 @@ pub fn build(conf: &Configuration) -> Result<()> {
         args.push("-v".into());
     }
 
+    if let Some(flags) = &conf.cli.unstable_flags {
+        args.push(format!("-Z={flags}"));
+    }
+
     if conf.cli.release {
         args.push("--release".into());
     }

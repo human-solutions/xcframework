@@ -23,6 +23,10 @@ pub struct XcCli {
     #[arg(short, long, action = clap::ArgAction::Count)]
     pub verbose: u8,
 
+    /// Unstable (nightly-only) flags to Cargo, see 'cargo -Z help' for details
+    #[arg(short = 'Z', value_name = "FLAG")]
+    pub unstable_flags: Option<String>,
+
     /// Build artifacts in release mode, with optimizations
     #[arg(short, long)]
     pub release: bool,
