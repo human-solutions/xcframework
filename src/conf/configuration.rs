@@ -99,6 +99,10 @@ impl Configuration {
     }
 
     pub fn profile(&self) -> &str {
-        self.cli.profile.as_deref().unwrap_or("debug")
+        if self.cli.release {
+            "release"
+        } else {
+            self.cli.profile.as_deref().unwrap_or("debug")
+        }
     }
 }

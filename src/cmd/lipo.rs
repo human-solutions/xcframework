@@ -30,7 +30,7 @@ fn join_or_copy(conf: &Configuration, targets: &[Triple], name: &str) -> Result<
 }
 
 fn lipo_join(conf: &Configuration, targets: &[Triple], name_ext: &str) -> Result<String> {
-    let profile = conf.cli.profile.as_deref().unwrap_or("debug");
+    let profile = conf.profile();
     let target_dir = &conf.target_dir;
     let build_dir = &conf.build_dir;
     let name = &conf.lib_name.replace('-', "_");
