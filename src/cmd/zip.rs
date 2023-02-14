@@ -10,7 +10,9 @@ pub fn xcframework(conf: &Configuration) -> Result<()> {
 
     zip_extensions::zip_create_from_directory(
         &dest.into_std_path_buf(),
-        &source.into_std_path_buf(),
+        &source.clone().into_std_path_buf(),
     )?;
+
+    fs_err::remove_dir_all(source)?;
     Ok(())
 }
