@@ -14,11 +14,8 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 yansi = "0.5"
 fs-err = "2.9"
-target-lexicon = { git = "https://github.com/akesson/target-lexicon.git", features = [
-  "serde",
-] }
-# rustup-target = { git = "https://github.com/akesson/rustup-target.git" }
-rustup-target = { path = "../rustup-target" }
+target-lexicon = { version = "0.12", features = ["serde_support"] }
+rustup-configurator = "0.1"
 lazy_static = "1.4"
 dialoguer = "0.10"
 zip-extensions = "0.6"

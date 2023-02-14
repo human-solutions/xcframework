@@ -5,7 +5,7 @@ use anyhow::{bail, Result};
 use dialoguer::Confirm;
 
 pub fn check_needed(conf: &Configuration) -> Result<()> {
-    let targets = rustup_target::list()?;
+    let targets = rustup_configurator::list()?;
 
     let mut to_install = vec![];
     for needed_target in conf.cargo_section.chosen_targets() {
@@ -29,7 +29,7 @@ pub fn check_needed(conf: &Configuration) -> Result<()> {
             ))
             .interact()?;
         if do_install {
-            rustup_target::install(&to_install)?
+            rustup_configurator::install(&to_install)?
         } else {
             exit(1);
         }

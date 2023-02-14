@@ -1,6 +1,6 @@
 use crate::conf::Configuration;
 use anyhow::Result;
-use rustup_target::Triple;
+use rustup_configurator::Triple;
 
 pub fn assemble_libs(conf: &Configuration) -> Result<Vec<String>> {
     fs_err::create_dir_all(&conf.build_dir.join("libs"))?;
