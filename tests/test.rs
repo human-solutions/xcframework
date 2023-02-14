@@ -1,9 +1,9 @@
-use std::process::Command;
-
+use anyhow::Result;
 use camino::Utf8PathBuf;
 use cargo_xcframework::XcCli;
 use clap::Parser;
-use tempfile::tempdir;
+use std::process::Command;
+use tempfile::{tempdir, TempDir};
 
 #[test]
 fn test_hello() {
@@ -20,7 +20,12 @@ fn test_hello() {
 #[test]
 fn end_to_end_static() {
     let tmp = tempdir().unwrap();
-    let tmp_dir = tmp.path().to_str().unwrap();
+    let target_dir = tmp
+        .path()
+        .join("mymath-lib/target")
+        .to_str()
+        .unwrap()
+        .to_string();
 
     let cli = XcCli::parse_from(&[
         "cargo-xcframework",
@@ -28,18 +33,23 @@ fn end_to_end_static() {
         "--manifest-path=examples/end-to-end/mymath-lib/Cargo.toml",
         "--lib-type=staticlib",
         "--target-dir",
-        tmp_dir,
+        &target_dir,
     ]);
 
+    let swift_dir = cp_swift_exe(&tmp).unwrap();
     cargo_xcframework::run(cli).unwrap();
 
-    let build_dir = Utf8PathBuf::from("examples/end-to-end/swift-exe/.build");
-    if build_dir.exists() {
-        fs_err::remove_dir_all(build_dir).unwrap();
-    }
+    // Command::new("ls")
+    //     .arg("-lha")
+    //     .arg("xcframework")
+    //     .current_dir(&target_dir)
+    //     .spawn()
+    //     .unwrap()
+    //     .wait()
+    //     .unwrap();
 
     let cmd = Command::new("swift")
-        .current_dir("examples/end-to-end/swift-exe")
+        .current_dir(swift_dir)
         .arg("run")
         .output()
         .unwrap();
@@ -53,7 +63,12 @@ fn end_to_end_static() {
 #[test]
 fn end_to_end_dynamic() {
     let tmp = tempdir().unwrap();
-    let tmp_dir = tmp.path().to_str().unwrap();
+    let target_dir = tmp
+        .path()
+        .join("mymath-lib/target")
+        .to_str()
+        .unwrap()
+        .to_string();
 
     let cli = XcCli::parse_from(&[
         "cargo-xcframework",
@@ -61,18 +76,14 @@ fn end_to_end_dynamic() {
         "--manifest-path=examples/end-to-end/mymath-lib/Cargo.toml",
         "--lib-type=cdylib",
         "--target-dir",
-        tmp_dir,
+        &target_dir,
     ]);
 
+    let swift_dir = cp_swift_exe(&tmp).unwrap();
     cargo_xcframework::run(cli).unwrap();
 
-    let build_dir = Utf8PathBuf::from("examples/end-to-end/swift-exe/.build");
-    if build_dir.exists() {
-        fs_err::remove_dir_all(build_dir).unwrap();
-    }
-
     let cmd = Command::new("swift")
-        .current_dir("examples/end-to-end/swift-exe")
+        .current_dir(&swift_dir)
         .arg("run")
         .output()
         .unwrap();
@@ -81,4 +92,21 @@ fn end_to_end_dynamic() {
     eprintln!("{}", String::from_utf8_lossy(&cmd.stderr));
 
     assert_eq!("MyMath.rust_add(4 + 2) = 6\n", output);
+}
+
+fn cp_swift_exe(tmp: &TempDir) -> Result<Utf8PathBuf> {
+    let from = Utf8PathBuf::from("examples/end-to-end/swift-exe");
+
+    let build_dir = from.join(".build");
+    if build_dir.exists() {
+        fs_err::remove_dir_all(build_dir)?;
+    }
+
+    let to = Utf8PathBuf::from_path_buf(tmp.path().to_path_buf()).unwrap();
+
+    if !to.exists() {
+        fs_err::create_dir_all(&to)?;
+    }
+    fs_extra::dir::copy(&from, &to, &fs_extra::dir::CopyOptions::new())?;
+    Ok(to.join("swift-exe"))
 }

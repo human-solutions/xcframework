@@ -9,10 +9,11 @@ pub fn xcframework(conf: &Configuration) -> Result<()> {
     let dest = source.with_extension("xcframework.zip");
 
     zip_extensions::zip_create_from_directory(
-        &dest.into_std_path_buf(),
+        &dest.clone().into_std_path_buf(),
         &source.clone().into_std_path_buf(),
     )?;
 
+    println!("Wrote zip file to {}", dest);
     fs_err::remove_dir_all(source)?;
     Ok(())
 }
