@@ -4,11 +4,19 @@ mod ext;
 
 use crate::conf::Configuration;
 use anyhow::Result;
+use camino::Utf8PathBuf;
 use cmd::{cargo, lipo, rustup, xcodebuild, zip};
 pub use conf::{XCFrameworkConfiguration, XcCli};
 use ext::PathBufExt;
 
-pub fn run(cli: XcCli) -> Result<()> {
+#[derive(Debug, PartialEq, Eq)]
+pub struct Produced {
+    pub module_name: String,
+    pub path: Utf8PathBuf,
+    pub is_zipped: bool,
+}
+
+pub fn build(cli: XcCli) -> Result<Produced> {
     let conf = Configuration::load(cli)?;
 
     conf.build_dir.remove_dir_all_if_exists()?;
@@ -18,15 +26,22 @@ pub fn run(cli: XcCli) -> Result<()> {
 
     let libs = lipo::assemble_libs(&conf)?;
     xcodebuild::assemble(&conf, libs)?;
-    if conf.cargo_section.zip {
-        zip::xcframework(&conf)?;
+    let module_name = conf.module_name()?;
+
+    let (path, is_zipped) = if conf.cargo_section.zip {
+        (zip::xcframework(&conf)?, true)
     } else {
-        let module_name = conf.module_name()?;
         let from = conf.build_dir.join(format!("{module_name}.xcframework"));
         let to = conf.target_dir.join(format!("{module_name}.xcframework"));
-        fs_err::rename(from, to)?;
-    }
+        fs_err::rename(from, &to)?;
+        (to, false)
+    };
+
     conf.build_dir.remove_dir_all_if_exists()?;
 
-    Ok(())
+    Ok(Produced {
+        module_name,
+        path,
+        is_zipped,
+    })
 }

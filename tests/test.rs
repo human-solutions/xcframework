@@ -13,8 +13,9 @@ fn test_hello() {
         "--manifest-path=tests/project/Cargo.toml",
     ]);
 
-    let res = cargo_xcframework::run(cli);
-    res.unwrap()
+    let produced = cargo_xcframework::build(cli).unwrap();
+    assert!(produced.is_zipped);
+    assert_eq!(produced.module_name, "HelloTest");
 }
 
 #[test]
@@ -37,7 +38,9 @@ fn end_to_end_static() {
     ]);
 
     let swift_dir = cp_swift_exe(&tmp).unwrap();
-    cargo_xcframework::run(cli).unwrap();
+    let produced = cargo_xcframework::build(cli).unwrap();
+    assert!(produced.is_zipped);
+    assert_eq!(produced.module_name, "MyMath");
 
     let cmd = Command::new("swift")
         .current_dir(swift_dir)
@@ -71,7 +74,10 @@ fn end_to_end_dynamic() {
     ]);
 
     let swift_dir = cp_swift_exe(&tmp).unwrap();
-    cargo_xcframework::run(cli).unwrap();
+
+    let produced = cargo_xcframework::build(cli).unwrap();
+    assert!(produced.is_zipped);
+    assert_eq!(produced.module_name, "MyMath");
 
     let cmd = Command::new("swift")
         .current_dir(&swift_dir)

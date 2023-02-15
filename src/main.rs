@@ -1,4 +1,4 @@
-use cargo_xcframework::{run, XcCli};
+use cargo_xcframework::{build, XcCli};
 use clap::Parser;
 use std::env;
 
@@ -11,7 +11,7 @@ fn main() {
     }
 
     let args = XcCli::parse_from(&args);
-    if let Err(e) = crate::run(args) {
+    if let Err(e) = crate::build(args) {
         eprintln!("{:?}", e);
         std::process::exit(1);
     }

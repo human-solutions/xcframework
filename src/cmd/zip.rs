@@ -1,8 +1,9 @@
 use crate::{conf::Configuration, ext::PathBufExt};
 use anyhow::Result;
+use camino::Utf8PathBuf;
 use zip_extensions;
 
-pub fn xcframework(conf: &Configuration) -> Result<()> {
+pub fn xcframework(conf: &Configuration) -> Result<Utf8PathBuf> {
     let module_name = conf.module_name()?;
     let source = &conf.build_dir;
     let dest = conf
@@ -16,5 +17,5 @@ pub fn xcframework(conf: &Configuration) -> Result<()> {
         &source.clone().into_std_path_buf(),
     )?;
 
-    Ok(())
+    Ok(dest)
 }
