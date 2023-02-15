@@ -1,6 +1,6 @@
 mod cmd;
 mod conf;
-mod ext;
+pub mod ext;
 
 use crate::conf::Configuration;
 use anyhow::Result;

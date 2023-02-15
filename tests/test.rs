@@ -1,5 +1,6 @@
 use anyhow::Result;
 use camino::Utf8PathBuf;
+use cargo_xcframework::ext::PathBufExt;
 use cargo_xcframework::XcCli;
 use clap::Parser;
 use std::process::Command;
@@ -96,9 +97,8 @@ fn cp_swift_exe(tmp: &TempDir) -> Result<Utf8PathBuf> {
 
     let to = Utf8PathBuf::from_path_buf(tmp.path().to_path_buf()).unwrap();
 
-    if !to.exists() {
-        fs_err::create_dir_all(&to)?;
-    }
+    to.create_dir_all_if_needed()?;
+
     fs_extra::dir::copy(&from, &to, &fs_extra::dir::CopyOptions::new())?;
     Ok(to.join("swift-exe"))
 }
