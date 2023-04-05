@@ -72,27 +72,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cargo-xcframework"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "camino",
- "cargo_metadata",
- "clap",
- "dialoguer",
- "fs-err",
- "fs_extra",
- "lazy_static",
- "rustup-configurator",
- "serde",
- "serde_json",
- "target-lexicon",
- "tempfile",
- "yansi",
- "zip-extensions",
-]
-
-[[package]]
 name = "cargo_metadata"
 version = "0.15.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -808,6 +787,27 @@ name = "windows_x86_64_msvc"
 version = "0.42.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "447660ad36a13288b1db4d4248e857b510e8c3a225c822ba4fb748c0aafecffd"
+
+[[package]]
+name = "xcframework"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "camino",
+ "cargo_metadata",
+ "clap",
+ "dialoguer",
+ "fs-err",
+ "fs_extra",
+ "lazy_static",
+ "rustup-configurator",
+ "serde",
+ "serde_json",
+ "target-lexicon",
+ "tempfile",
+ "yansi",
+ "zip-extensions",
+]
 
 [[package]]
 name = "yansi"

@@ -1,6 +1,6 @@
-use cargo_xcframework::{build, XcCli};
 use clap::Parser;
 use std::env;
+use xcframework::{build, XcCli};
 
 fn main() {
     let mut args: Vec<String> = env::args().collect();

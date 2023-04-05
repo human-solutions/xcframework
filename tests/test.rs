@@ -1,10 +1,10 @@
 use anyhow::Result;
 use camino::Utf8PathBuf;
-use cargo_xcframework::ext::PathBufExt;
-use cargo_xcframework::XcCli;
 use clap::Parser;
 use std::process::Command;
 use tempfile::{tempdir, TempDir};
+use xcframework::ext::PathBufExt;
+use xcframework::XcCli;
 
 #[test]
 fn test_hello() {
@@ -14,7 +14,7 @@ fn test_hello() {
         "--manifest-path=tests/project/Cargo.toml",
     ]);
 
-    let produced = cargo_xcframework::build(cli).unwrap();
+    let produced = xcframework::build(cli).unwrap();
     assert!(produced.is_zipped);
     assert_eq!(produced.module_name, "HelloTest");
 }
@@ -39,7 +39,7 @@ fn end_to_end_static() {
     ]);
 
     let swift_dir = cp_swift_exe(&tmp).unwrap();
-    let produced = cargo_xcframework::build(cli).unwrap();
+    let produced = xcframework::build(cli).unwrap();
     assert!(produced.is_zipped);
     assert_eq!(produced.module_name, "MyMath");
 
@@ -76,7 +76,7 @@ fn end_to_end_dynamic() {
 
     let swift_dir = cp_swift_exe(&tmp).unwrap();
 
-    let produced = cargo_xcframework::build(cli).unwrap();
+    let produced = xcframework::build(cli).unwrap();
     assert!(produced.is_zipped);
     assert_eq!(produced.module_name, "MyMath");
 

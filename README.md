@@ -23,11 +23,11 @@ Cargo plugin for building XCFrameworks
 
 Install:
 
-> `cargo install cargo-xcframework`
+> `cargo install xcframework`
 
 If you for any reason needs the bleeding-edge super fresh version:
 
-> `cargo install --git https://github.com/akesson/cargo-xcframework`
+> `cargo install --git https://github.com/human-solutions/xcframework`
 
 Help:
 
