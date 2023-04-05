@@ -1,4 +1,8 @@
-//! [![crates.io](https://img.shields.io/crates/v/cargo-xcframeworks)](https://crates.io/crates/cargo-xcframeworks)
+//! [![crates.io](https://img.shields.io/crates/v/xcframeworks)](https://crates.io/crates/xcframeworks)
+//!
+//! > <span style="color:darkorange">**⚠️ WARNING**</span>
+//! >
+//! > This is work in progress and is not ready for use
 //!
 //! Cargo plugin for building XCFrameworks
 //!
