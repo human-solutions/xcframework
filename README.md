@@ -1,3 +1,13 @@
+<!-- 
+Please don't edit. This document has been generated from src/readme.tpl.md
+--> 
+# X-Path
+
+- [X-Path](#x-path)
+- [Features](#features)
+- [Getting started](#getting-started)
+- [Configuration](#configuration)
+
 [![crates.io](https://img.shields.io/crates/v/cargo-xcframeworks)](https://crates.io/crates/cargo-xcframeworks)
 
 Cargo plugin for building XCFrameworks
@@ -115,3 +125,4 @@ iOS-simulator-targets = ["aarch64-apple-ios-sim", "x86_64-apple-ios"]
 
 The iOS and macOS versions targeted can be set with the environment variables:
 `MACOSX_DEPLOYMENT_TARGET` and `IPHONEOS_DEPLOYMENT_TARGET`. See [apple_base.rs](https://github.com/rust-lang/rust/blob/master/compiler/rustc_target/src/spec/apple_base.rs) for the default values.
+

@@ -1,7 +1,12 @@
 [package]
 name = "xcframework"
-version = "0.1.0"
+version = "0.1.0-alpha.1"
 edition = "2021"
+license = "MIT"
+repository = "https://github.com/human-solutions/xcframework"
+description = "Cargo plugin and library for building Apple XCFrameworks"
+categories = ["development-tools::cargo-plugins", "development-tools::ffi"]
+
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -23,3 +28,4 @@ fs_extra = "1.2"
 
 [dev-dependencies]
 tempfile = "3.3"
+markdown-includes = "0.1"
