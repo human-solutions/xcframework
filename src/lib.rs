@@ -4,7 +4,7 @@
 //! >
 //! > This is work in progress and is not ready for use
 //!
-//! Cargo plugin for building XCFrameworks
+//! A Cargo plugin and library for building Apple XCFrameworks from Rust libraries
 //!
 //! <br/>
 //!

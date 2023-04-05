@@ -1,4 +1,4 @@
-# XCFRamework
+# XCFramework
 
 ```toc
 

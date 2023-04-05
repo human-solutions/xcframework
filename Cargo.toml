@@ -1,10 +1,10 @@
 [package]
 name = "xcframework"
-version = "0.1.0-alpha.2"
+version = "0.1.0-alpha.3"
 edition = "2021"
 license = "MIT"
 repository = "https://github.com/human-solutions/xcframework"
-description = "Cargo plugin and library for building Apple XCFrameworks"
+description = "A Cargo plugin and library for building Apple XCFrameworks"
 categories = ["development-tools::cargo-plugins", "development-tools::ffi"]
 
 
