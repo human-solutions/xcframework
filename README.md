@@ -1,20 +1,21 @@
 <!-- 
 Please don't edit. This document has been generated from src/readme.tpl.md
 --> 
-# XCFRamework
+[![crates.io](https://img.shields.io/crates/v/xcframework)](https://crates.io/crates/xcframework)
 
-- [XCFRamework](#xcframework)
+# XCFramework
+
+- [XCFramework](#xcframework)
 - [Features](#features)
 - [Getting started](#getting-started)
 - [Configuration](#configuration)
 
-[![crates.io](https://img.shields.io/crates/v/xcframeworks)](https://crates.io/crates/xcframeworks)
 
 > <span style="color:darkorange">**⚠️ WARNING**</span>
 >
 > This is work in progress and is not ready for use
 
-Cargo plugin for building XCFrameworks
+A Cargo plugin and library for building Apple XCFrameworks from Rust libraries
 
 <br/>
 

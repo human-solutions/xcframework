@@ -1,4 +1,3 @@
-//! [![crates.io](https://img.shields.io/crates/v/xcframeworks)](https://crates.io/crates/xcframeworks)
 //!
 //! > <span style="color:darkorange">**⚠️ WARNING**</span>
 //! >
