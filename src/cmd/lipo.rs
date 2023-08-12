@@ -6,17 +6,23 @@ pub fn assemble_libs(conf: &Configuration) -> Result<Vec<String>> {
     fs_err::create_dir_all(&conf.build_dir.join("libs"))?;
 
     let mut libs = vec![];
-    libs.push(join_or_copy(conf, &conf.cargo_section.iOS_targets, "ios")?);
-    libs.push(join_or_copy(
-        conf,
-        &conf.cargo_section.iOS_simulator_targets,
-        "ios_sim",
-    )?);
-    libs.push(join_or_copy(
-        conf,
-        &conf.cargo_section.macOS_targets,
-        "macos",
-    )?);
+    if conf.cargo_section.iOS {
+        libs.push(join_or_copy(conf, &conf.cargo_section.iOS_targets, "ios")?);
+    }
+    if conf.cargo_section.simulators {
+        libs.push(join_or_copy(
+            conf,
+            &conf.cargo_section.iOS_simulator_targets,
+            "ios_sim",
+        )?);
+    }
+    if conf.cargo_section.macOS {
+        libs.push(join_or_copy(
+            conf,
+            &conf.cargo_section.macOS_targets,
+            "macos",
+        )?);
+    }
 
     Ok(libs)
 }
