@@ -1,4 +1,3 @@
-use std::str::FromStr;
 use target_lexicon::{triple, Triple};
 
 lazy_static::lazy_static! {

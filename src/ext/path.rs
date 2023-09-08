@@ -46,7 +46,7 @@ impl PathBufExt for Utf8PathBuf {
         if !to_path.exists() {
             fs_err::create_dir_all(to_path)?;
         }
-        fs_extra::dir::copy(&self, to_path, &CopyOptions::new())?;
+        fs_extra::dir::copy(self, to_path, &CopyOptions::new())?;
 
         Ok(())
     }
@@ -57,7 +57,7 @@ impl PathBufExt for Utf8PathBuf {
             fs_err::create_dir_all(to_path)?;
         }
         let options = CopyOptions::new().content_only(true);
-        fs_extra::dir::copy(&self, to_path, &options)?;
+        fs_extra::dir::copy(self, to_path, &options)?;
 
         Ok(())
     }

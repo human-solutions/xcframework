@@ -3,7 +3,7 @@ use anyhow::Result;
 use rustup_configurator::Triple;
 
 pub fn assemble_libs(conf: &Configuration) -> Result<Vec<String>> {
-    fs_err::create_dir_all(&conf.build_dir.join("libs"))?;
+    fs_err::create_dir_all(conf.build_dir.join("libs"))?;
 
     let mut libs = vec![];
     if conf.cargo_section.iOS {
