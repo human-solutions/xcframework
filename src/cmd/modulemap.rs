@@ -21,7 +21,7 @@ fn parse_module_name(content: &str) -> Result<String> {
         .find_map(|line| line.starts_with("module ").then(|| &line[MOD_LEN..]));
 
     let Some(found_start) = found_start else {
-      bail!("No 'module' declaration found");
+        bail!("No 'module' declaration found");
     };
 
     let mut module = found_start.trim_end();
