@@ -3,7 +3,6 @@
 use anyhow::{bail, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use serde::Deserialize;
-use std::str::FromStr;
 use target_lexicon::{triple, OperatingSystem, Triple};
 
 use crate::ext::TripleExt;
