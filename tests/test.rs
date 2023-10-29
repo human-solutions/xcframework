@@ -8,7 +8,7 @@ use xcframework::XcCli;
 
 #[test]
 fn test_hello() {
-    let cli = XcCli::parse_from(&[
+    let cli = XcCli::parse_from([
         "cargo-xcframework",
         "--quiet",
         "--manifest-path=tests/project/Cargo.toml",
@@ -29,7 +29,7 @@ fn end_to_end_static() {
         .unwrap()
         .to_string();
 
-    let cli = XcCli::parse_from(&[
+    let cli = XcCli::parse_from([
         "cargo-xcframework",
         "--quiet",
         "--manifest-path=examples/end-to-end/mymath-lib/Cargo.toml",
@@ -65,7 +65,7 @@ fn end_to_end_dynamic() {
         .unwrap()
         .to_string();
 
-    let cli = XcCli::parse_from(&[
+    let cli = XcCli::parse_from([
         "cargo-xcframework",
         "--quiet",
         "--manifest-path=examples/end-to-end/mymath-lib/Cargo.toml",
@@ -99,6 +99,6 @@ fn cp_swift_exe(tmp: &TempDir) -> Result<Utf8PathBuf> {
 
     to.create_dir_all_if_needed()?;
 
-    fs_extra::dir::copy(&from, &to, &fs_extra::dir::CopyOptions::new())?;
+    fs_extra::dir::copy(from, &to, &fs_extra::dir::CopyOptions::new())?;
     Ok(to.join("swift-exe"))
 }
