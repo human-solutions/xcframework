@@ -33,11 +33,8 @@ impl Configuration {
         let mut dir = manifest_path.clone();
         dir.pop();
 
-        let target_dir = dir.join(
-            cli.target_dir
-                .clone()
-                .unwrap_or_else(|| Utf8PathBuf::from("target")),
-        );
+        let target_dir = cli.target_dir.clone().unwrap_or_else(|| dir.join("target"));
+
         let build_dir = target_dir.join("xcframework");
 
         let metadata = MetadataCommand::new().manifest_path(manifest_path).exec()?;

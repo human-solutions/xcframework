@@ -124,7 +124,7 @@ mod conf;
 pub mod ext;
 
 use crate::conf::Configuration;
-use anyhow::Result;
+use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use cmd::{cargo, lipo, rustup, xcodebuild, zip};
 pub use conf::{XCFrameworkConfiguration, XcCli};
@@ -138,15 +138,17 @@ pub struct Produced {
 }
 
 pub fn build(cli: XcCli) -> Result<Produced> {
-    let conf = Configuration::load(cli)?;
+    let conf = Configuration::load(cli).context("loading configuration")?;
 
-    conf.build_dir.remove_dir_all_if_exists()?;
+    conf.build_dir
+        .remove_dir_all_if_exists()
+        .context("cleaning build dir")?;
 
-    rustup::check_needed(&conf)?;
-    cargo::build(&conf)?;
+    rustup::check_needed(&conf).context("checking rustup targets")?;
+    cargo::build(&conf).context("running cargo build")?;
 
-    let libs = lipo::assemble_libs(&conf)?;
-    xcodebuild::assemble(&conf, libs)?;
+    let libs = lipo::assemble_libs(&conf).context("lipo: assembling libraries")?;
+    xcodebuild::assemble(&conf, libs).context("xcodebuild - assemble libraries")?;
     let module_name = conf.module_name()?;
 
     let (path, is_zipped) = if conf.cargo_section.zip {

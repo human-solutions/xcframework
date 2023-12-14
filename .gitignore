@@ -7,7 +7,10 @@
 
 target/
 
+# swift build output folder
 .build/
+
+/tests/temp
 
 build/
 

@@ -1,5 +1,5 @@
 <!-- 
-Please don't edit. This document has been generated from src/readme.tpl.md
+Please don't edit. This document has been generated from "src/readme.tpl.md"
 --> 
 [![crates.io](https://img.shields.io/crates/v/xcframework)](https://crates.io/crates/xcframework)
 
