@@ -1,4 +1,4 @@
-[workspace]
+workspace = { members = ["xtask"] }
 
 [package]
 name = "mymath-lib"
