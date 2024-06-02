@@ -1,16 +1,18 @@
 #![allow(non_snake_case)]
 
+use std::str::FromStr;
+
 use anyhow::{bail, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
+use rustup_configurator::target::Triple;
 use serde::Deserialize;
-use target_lexicon::{triple, OperatingSystem, Triple};
 
 use crate::ext::TripleExt;
 
 lazy_static::lazy_static! {
-    static ref IOS_DEFAULT: Vec<Triple> = vec![triple!("aarch64-apple-ios")];
-    static ref IOS_SIM_DEFAULT: Vec<Triple> =vec![triple!("aarch64-apple-ios-sim"), triple!("x86_64-apple-ios")];
-    static ref MACOS_DEFAULT: Vec<Triple> = vec![triple!("x86_64-apple-darwin"), triple!("aarch64-apple-darwin")];
+    static ref IOS_DEFAULT: Vec<Triple> = vec!["aarch64-apple-ios".into()];
+    static ref IOS_SIM_DEFAULT: Vec<Triple> =vec!["aarch64-apple-ios-sim".into(), "x86_64-apple-ios".into()];
+    static ref MACOS_DEFAULT: Vec<Triple> = vec!["x86_64-apple-darwin".into(), "aarch64-apple-darwin".into()];
 }
 
 #[derive(Deserialize, Debug, Clone, clap::ValueEnum, PartialEq, Eq)]
@@ -132,8 +134,9 @@ impl XCFrameworkConfiguration {
     }
 }
 
-fn validate_triples(targets: &Vec<Triple>, os: &OperatingSystem, simulator: bool) -> Result<()> {
+fn validate_triples(targets: &Vec<Triple>, os: &target_lexicon::OperatingSystem, simulator: bool) -> Result<()> {
     for triple in targets {
+        let triple = target_lexicon::Triple::from_str(&triple).expect(&format!("Triple is invalid: {triple}"));
         if triple.operating_system != *os {
             bail!("expected {os} not {} in {triple}", triple.architecture);
         }

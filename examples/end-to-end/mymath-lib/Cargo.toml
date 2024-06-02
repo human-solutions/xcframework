@@ -10,10 +10,11 @@ name = "mymath"
 crate-type = ["staticlib", "cdylib"]
 
 [package.metadata.xcframework]
+lib-type = "staticlib"
 include-dir = "include"
 iOS = true
-macOS = true
-simulators = true
+macOS = false
+simulators = false
 
 [profile.release]
 lto = true
