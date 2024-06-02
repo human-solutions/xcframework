@@ -15,6 +15,9 @@ fn test_hello() {
         "--manifest-path=tests/project/Cargo.toml",
     ]);
 
+    // FIXME: if needed targets missing, it will block running the test by interactive prompt
+    // WORKAROUND: add the targets fisrt
+
     let produced = xcframework::build(cli).unwrap();
     assert!(produced.is_zipped);
     assert_eq!(produced.module_name, "HelloTest");

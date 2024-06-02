@@ -617,8 +617,9 @@ dependencies = [
 
 [[package]]
 name = "rustup-configurator"
-version = "0.1.1"
-source = "git+https://github.com/Binlogo/rustup-configurator.git?branch=feat/loose-err-target-lexicon#324ee3aed3ec4741ef5c889e768a2dbc40b9f07d"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "656d6d46e718fac9012f01f020924110917964447634b2ce0ad91121b01781e8"
 dependencies = [
  "strip-ansi-escapes",
  "thiserror",

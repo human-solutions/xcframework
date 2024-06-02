@@ -134,9 +134,14 @@ impl XCFrameworkConfiguration {
     }
 }
 
-fn validate_triples(targets: &Vec<Triple>, os: &target_lexicon::OperatingSystem, simulator: bool) -> Result<()> {
+fn validate_triples(
+    targets: &Vec<Triple>,
+    os: &target_lexicon::OperatingSystem,
+    simulator: bool,
+) -> Result<()> {
     for triple in targets {
-        let triple = target_lexicon::Triple::from_str(&triple).expect(&format!("Triple is invalid: {triple}"));
+        let triple = target_lexicon::Triple::from_str(&triple)
+            .expect(&format!("Triple is invalid: {triple}"));
         if triple.operating_system != *os {
             bail!("expected {os} not {} in {triple}", triple.architecture);
         }
