@@ -25,7 +25,7 @@ pub enum CrateType {
 /// Create a universal library for each platform using lipo.
 pub fn lipo_create_platform_libraries(
     platform_lib_paths: &HashMap<Platform, Vec<Utf8PathBuf>>,
-    output_lib_name: &'static str,
+    output_lib_name: &str,
     output_dir: &Utf8PathBuf,
 ) -> anyhow::Result<HashMap<Platform, Utf8PathBuf>> {
     let sh = Shell::new()?;

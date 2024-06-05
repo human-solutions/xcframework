@@ -1,71 +1,55 @@
+use std::collections::HashMap;
+
 use crate::conf::Configuration;
+use crate::core::Platform;
 use anyhow::Result;
+use camino::Utf8PathBuf;
 use rustup_configurator::target::Triple;
 
 pub fn assemble_libs(conf: &Configuration) -> Result<Vec<String>> {
-    fs_err::create_dir_all(conf.build_dir.join("libs"))?;
+    let libs_dir = conf.build_dir.join("libs");
+    fs_err::create_dir_all(&libs_dir)?;
 
-    let mut libs = vec![];
+    let mut platform_lib_paths = HashMap::new();
     if conf.cargo_section.iOS {
-        libs.push(join_or_copy(conf, &conf.cargo_section.iOS_targets, "ios")?);
+        let lib_paths = lib_paths_for_targets(conf, &conf.cargo_section.iOS_targets)?;
+        platform_lib_paths.insert(Platform::Ios, lib_paths);
     }
     if conf.cargo_section.simulators {
-        libs.push(join_or_copy(
-            conf,
-            &conf.cargo_section.iOS_simulator_targets,
-            "ios_sim",
-        )?);
+        let lib_paths = lib_paths_for_targets(conf, &conf.cargo_section.iOS_simulator_targets)?;
+        platform_lib_paths.insert(Platform::IosSimulator, lib_paths);
     }
     if conf.cargo_section.macOS {
-        libs.push(join_or_copy(
-            conf,
-            &conf.cargo_section.macOS_targets,
-            "macos",
-        )?);
+        let lib_paths = lib_paths_for_targets(conf, &conf.cargo_section.macOS_targets)?;
+        platform_lib_paths.insert(Platform::Macos, lib_paths);
     }
 
-    Ok(libs)
-}
-
-fn join_or_copy(conf: &Configuration, targets: &[Triple], name: &str) -> Result<String> {
-    if targets.len() == 1 {
-        single_copy(conf, &targets[0], name)
-    } else {
-        lipo_join(conf, targets, name)
-    }
-}
-
-fn lipo_join(conf: &Configuration, targets: &[Triple], name_ext: &str) -> Result<String> {
-    let profile = conf.profile();
-    let target_dir = &conf.target_dir;
-    let build_dir = &conf.build_dir;
-    let name = &conf.lib_name.replace('-', "_");
     let ending = conf.lib_type.file_ending();
+    let name = &conf.lib_name.replace('-', "_");
+    let output_lib_name = format!("lib{name}.{ending}");
+    let output = crate::core::lipo_create_platform_libraries(
+        &platform_lib_paths,
+        &output_lib_name,
+        &libs_dir,
+    )?;
 
-    let mut args = vec!["-create".to_string()];
+    Ok(output.values().into_iter().map(|p| p.to_string()).collect())
+}
+
+fn lib_paths_for_targets(conf: &Configuration, targets: &[Triple]) -> Result<Vec<Utf8PathBuf>> {
+    let mut paths = vec![];
+
+    let target_dir = &conf.target_dir;
+    let profile = conf.profile();
+    let ending = conf.lib_type.file_ending();
+    let name = &conf.lib_name.replace('-', "_");
+
     for target in targets {
-        args.push(format!(
-            "{target_dir}/{target}/{profile}/lib{name}.{ending}"
-        ));
+        let path = target_dir
+            .join(target)
+            .join(profile)
+            .join(format!("lib{name}.{ending}"));
+        paths.push(path)
     }
-
-    args.push("-output".into());
-    let out = format!("{build_dir}/libs/lib{name}_{name_ext}.{ending}");
-    args.push(out.clone());
-
-    super::run("lipo", &args, conf.cli.quiet)?;
-    Ok(out)
-}
-
-fn single_copy(conf: &Configuration, target: &Triple, name_ext: &str) -> Result<String> {
-    let profile = conf.profile();
-    let ending = conf.lib_type.file_ending();
-    let target_dir = &conf.target_dir;
-    let build_dir = &conf.build_dir;
-    let name = &conf.lib_name.replace('-', "_");
-
-    let src = format!("{target_dir}/{target}/{profile}/lib{name}.{ending}",);
-    let dest = format!("{build_dir}/libs/lib{name}_{name_ext}.{ending}");
-    fs_err::copy(src, &dest)?;
-    Ok(dest)
+    Ok(paths)
 }
