@@ -20,6 +20,13 @@ fn test_hello() {
 
     // FIXME: if needed targets missing, it will block running the test by interactive prompt
     // WORKAROUND: add the targets fisrt
+    rustup_configurator::target::install(&vec![
+        "aarch64-apple-darwin".to_owned(),
+        "aarch64-apple-ios".to_owned(),
+        "aarch64-apple-ios-sim".to_owned(),
+        "x86_64-apple-darwin".to_owned(),
+        "x86_64-apple-ios".to_owned(),
+    ]).unwrap();
 
     let produced = xcframework::build(cli).unwrap();
     assert!(produced.is_zipped);
