@@ -121,6 +121,7 @@
 //!
 mod cmd;
 mod conf;
+pub mod core;
 pub mod ext;
 
 use crate::conf::Configuration;
