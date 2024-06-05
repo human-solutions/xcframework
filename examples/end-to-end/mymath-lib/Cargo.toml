@@ -13,8 +13,8 @@ crate-type = ["staticlib", "cdylib"]
 lib-type = "staticlib"
 include-dir = "include"
 iOS = true
-macOS = false
-simulators = false
+macOS = true
+simulators = true
 
 [profile.release]
 lto = true
