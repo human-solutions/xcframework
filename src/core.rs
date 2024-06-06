@@ -2,17 +2,10 @@ use std::collections::HashMap;
 
 use anyhow::Context;
 use camino::Utf8PathBuf;
+use platform::DarwinPlatform;
 use xshell::{cmd, Shell};
 
-/// An XCFramework bundle, or artifact, is a binary package created by Xcode that includes the frameworks and libraries necessary to build for
-/// multiple platforms (iOS, macOS, visionOS, tvOS, watchOS, and DriverKit), including Simulator builds.
-/// TODO: more platforms support
-#[derive(Hash, PartialEq, Eq, Clone, Debug)]
-pub enum Platform {
-    Ios,
-    IosSimulator,
-    Macos,
-}
+pub mod platform;
 
 /// The frameworks can be static or dynamic.
 /// From rust perspective, it's crate type: cdylib or staticlib.
@@ -24,10 +17,10 @@ pub enum CrateType {
 
 /// Create a universal library for each platform using lipo.
 pub fn lipo_create_platform_libraries(
-    platform_lib_paths: &HashMap<Platform, Vec<Utf8PathBuf>>,
+    platform_lib_paths: &HashMap<DarwinPlatform, Vec<Utf8PathBuf>>,
     output_lib_name: &str,
     output_dir: &Utf8PathBuf,
-) -> anyhow::Result<HashMap<Platform, Utf8PathBuf>> {
+) -> anyhow::Result<HashMap<DarwinPlatform, Utf8PathBuf>> {
     let sh = Shell::new()?;
     std::fs::create_dir_all(output_dir)?;
 
@@ -61,7 +54,7 @@ pub fn lipo_create_platform_libraries(
 /// An XCFramework can include dynamic library files, but only macOS supports these libraries for dynamic linking.
 /// Dynamic linking on iOS, watchOS, and tvOS requires the XCFramework to contain .framework bundles.
 pub fn wrap_as_framework(
-    platform: Platform,
+    platform: DarwinPlatform,
     crate_type: CrateType,
     lib_path: Utf8PathBuf,
     plist_path: Utf8PathBuf,
