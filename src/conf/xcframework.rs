@@ -140,8 +140,8 @@ fn validate_triples(
     simulator: bool,
 ) -> Result<()> {
     for triple in targets {
-        let triple = target_lexicon::Triple::from_str(&triple)
-            .expect(&format!("Triple is invalid: {triple}"));
+        let triple = target_lexicon::Triple::from_str(triple)
+            .unwrap_or_else(|_| panic!("Triple is invalid: {triple}"));
         if triple.operating_system != *os {
             bail!("expected {os} not {} in {triple}", triple.architecture);
         }
