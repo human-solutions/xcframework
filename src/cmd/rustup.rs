@@ -5,16 +5,16 @@ use anyhow::{bail, Result};
 use dialoguer::Confirm;
 
 pub fn check_needed(conf: &Configuration) -> Result<()> {
-    let targets = rustup_configurator::list()?;
+    let targets = rustup_configurator::target::list()?;
 
     let mut to_install = vec![];
     for needed_target in conf.cargo_section.chosen_targets() {
-        let Some((target, installed)) = targets.iter().find(|t| t.0 == *needed_target) else {
+        let Some(target) = targets.iter().find(|t| t.triple == *needed_target) else {
             bail!("")
         };
 
-        if !installed {
-            to_install.push(target.clone());
+        if !target.installed {
+            to_install.push(target.triple.clone());
         }
     }
     if !to_install.is_empty() {
@@ -29,7 +29,7 @@ pub fn check_needed(conf: &Configuration) -> Result<()> {
             ))
             .interact()?;
         if do_install {
-            rustup_configurator::install(&to_install)?
+            rustup_configurator::target::install(&to_install)?
         } else {
             exit(1);
         }

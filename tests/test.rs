@@ -9,6 +9,9 @@ use xcframework::XcCli;
 
 #[test]
 fn test_hello() {
+    // FIXME: if needed targets missing, it will block running the test by interactive prompt
+    // WORKAROUND: config `rust-toolchain.toml`, prepare the targets fisrt
+
     let cli = XcCli::parse_from([
         "cargo-xcframework",
         "--quiet",

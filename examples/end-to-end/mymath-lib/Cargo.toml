@@ -1,4 +1,4 @@
-[workspace]
+workspace = { members = ["xtask"] }
 
 [package]
 name = "mymath-lib"
@@ -10,6 +10,7 @@ name = "mymath"
 crate-type = ["staticlib", "cdylib"]
 
 [package.metadata.xcframework]
+lib-type = "staticlib"
 include-dir = "include"
 iOS = true
 macOS = true
