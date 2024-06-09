@@ -26,7 +26,8 @@ fn test_hello() {
         "aarch64-apple-ios-sim".to_owned(),
         "x86_64-apple-darwin".to_owned(),
         "x86_64-apple-ios".to_owned(),
-    ]).unwrap();
+    ])
+    .unwrap();
 
     let produced = xcframework::build(cli).unwrap();
     assert!(produced.is_zipped);
