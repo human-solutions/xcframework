@@ -32,20 +32,13 @@ impl InfoPlistBuilder {
     }
 }
 
-// TODO: simpliy the template
 const TEAMPLATE: &str = r###"
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>BuildMachineOSBuild</key>
-	<string>23F79</string>
-	<key>CFBundleDevelopmentRegion</key>
-	<string>en</string>
 	<key>CFBundleExecutable</key>
 	<string>{BUNDLE_NAME}</string>
-  <key>CFHeadersDirectory</key>
-  <string>Headers</string>
 	<key>CFBundleIdentifier</key>
 	<string>xcframework.cargo.{BUNDLE_NAME}</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -62,35 +55,12 @@ const TEAMPLATE: &str = r###"
 	</array>
 	<key>CFBundleVersion</key>
 	<string>1</string>
-	<key>DTCompiler</key>
-	<string>com.apple.compilers.llvm.clang.1_0</string>
-	<key>DTPlatformBuild</key>
-	<string>21F77</string>
 	<key>DTPlatformName</key>
 	<string>{PLATFORM_NAME}</string>
-	<key>DTPlatformVersion</key>
-	<string>17.5</string>
-	<key>DTSDKBuild</key>
-	<string>21F77</string>
 	<key>DTSDKName</key>
-	<string>iphonesimulator17.5</string>
-	<key>DTXcode</key>
-	<string>1540</string>
-	<key>DTXcodeBuild</key>
-	<string>15F31d</string>
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
+	<string>iphonesimulator13.0</string>
 	<key>MinimumOSVersion</key>
 	<string>13.0</string>
-	<key>NSHumanReadableCopyright</key>
-	<string>Copyright Â©. All rights reserved.</string>
-	<key>Test</key>
-	<string>Value</string>
-	<key>UIDeviceFamily</key>
-	<array>
-		<integer>1</integer>
-		<integer>2</integer>
-	</array>
 </dict>
 </plist>
 "###;
