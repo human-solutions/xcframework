@@ -1,5 +1,7 @@
 
-module MyMath {
-    header "mymath.h"
-    export *
+framework module MyMath {
+  umbrella header "mymath.h"
+
+  export *
+  module * { export * }
 }

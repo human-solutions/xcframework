@@ -6,7 +6,7 @@ use anyhow::Result;
 use camino::Utf8PathBuf;
 use rustup_configurator::target::Triple;
 
-pub fn assemble_libs(conf: &Configuration) -> Result<Vec<String>> {
+pub fn assemble_libs(conf: &Configuration) -> Result<HashMap<DarwinPlatform, Utf8PathBuf>> {
     let libs_dir = conf.build_dir.join("libs");
     fs_err::create_dir_all(&libs_dir)?;
 
@@ -27,13 +27,8 @@ pub fn assemble_libs(conf: &Configuration) -> Result<Vec<String>> {
     let ending = conf.lib_type.file_ending();
     let name = &conf.lib_name.replace('-', "_");
     let output_lib_name = format!("lib{name}.{ending}");
-    let output = crate::core::lipo_create_platform_libraries(
-        &platform_lib_paths,
-        &output_lib_name,
-        &libs_dir,
-    )?;
 
-    Ok(output.values().into_iter().map(|p| p.to_string()).collect())
+    crate::core::lipo_create_platform_libraries(&platform_lib_paths, &output_lib_name, &libs_dir)
 }
 
 fn lib_paths_for_targets(conf: &Configuration, targets: &[Triple]) -> Result<Vec<Utf8PathBuf>> {

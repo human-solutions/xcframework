@@ -149,7 +149,33 @@ pub fn build(cli: XcCli) -> Result<Produced> {
     cargo::build(&conf).context("running cargo build")?;
 
     let libs = lipo::assemble_libs(&conf).context("lipo: assembling libraries")?;
-    xcodebuild::assemble(&conf, libs).context("xcodebuild - assemble libraries")?;
+
+    let bundle_name = conf.module_name()?;
+    let frameworks = libs
+        .into_iter()
+        .filter_map(|(platform, lib_path)| {
+            let crate_type = conf.lib_type.clone().into();
+            let include_dir = &conf.cargo_section.include_dir;
+            let header_paths = get_header_paths(include_dir).ok()?;
+            let module_paths = get_module_paths(include_dir).ok()?;
+            let frameworks_dir = conf.target_dir.join("frameworks");
+            std::fs::create_dir_all(&frameworks_dir).ok()?;
+
+            core::wrap_as_framework(
+                platform,
+                crate_type,
+                lib_path,
+                None,
+                header_paths,
+                module_paths,
+                &bundle_name,
+                frameworks_dir,
+            )
+            .ok()
+        })
+        .collect::<Vec<_>>();
+
+    xcodebuild::assemble(&conf, frameworks).context("xcodebuild - assemble libraries")?;
     let module_name = conf.module_name()?;
 
     let (path, is_zipped) = if conf.cargo_section.zip {
@@ -168,6 +194,32 @@ pub fn build(cli: XcCli) -> Result<Produced> {
         path,
         is_zipped,
     })
+}
+
+fn get_header_paths(include_dir: &Utf8PathBuf) -> Result<Vec<Utf8PathBuf>> {
+    let mut header_paths = Vec::new();
+    let pattern = format!("{}/**/*.h", include_dir);
+
+    for entry in glob::glob(&pattern)? {
+        match entry {
+            Ok(path) => header_paths.push(Utf8PathBuf::from_path_buf(path).unwrap()),
+            Err(e) => println!("{:?}", e),
+        }
+    }
+
+    Ok(header_paths)
+}
+
+fn get_module_paths(include_dir: &Utf8PathBuf) -> Result<Vec<Utf8PathBuf>> {
+    let mut module_paths = Vec::new();
+    let pattern = format!("{}/**/*.modulemap", include_dir);
+    for entry in glob::glob(&pattern)? {
+        match entry {
+            Ok(path) => module_paths.push(Utf8PathBuf::from_path_buf(path).unwrap()),
+            Err(e) => println!("{:?}", e),
+        }
+    }
+    Ok(module_paths)
 }
 
 #[cfg(test)]

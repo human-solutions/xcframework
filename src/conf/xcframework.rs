@@ -32,6 +32,15 @@ impl LibType {
     }
 }
 
+impl Into<crate::core::CrateType> for LibType {
+    fn into(self) -> crate::core::CrateType {
+        match self {
+            LibType::StaticLib => crate::core::CrateType::Staticlib,
+            LibType::CDyLib => crate::core::CrateType::Cdylib,
+        }
+    }
+}
+
 #[derive(Deserialize, Debug, Default)]
 #[serde(rename_all = "kebab-case")]
 pub struct XCFrameworkConfiguration {

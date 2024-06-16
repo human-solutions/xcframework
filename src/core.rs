@@ -6,6 +6,7 @@ use platform::DarwinPlatform;
 use xshell::{cmd, Shell};
 
 pub mod platform;
+pub mod plist;
 
 /// The frameworks can be static or dynamic.
 /// From rust perspective, it's crate type: cdylib or staticlib.
@@ -57,7 +58,7 @@ pub fn wrap_as_framework(
     platform: DarwinPlatform,
     crate_type: CrateType,
     lib_path: Utf8PathBuf,
-    plist_path: Utf8PathBuf,
+    plist_path: Option<Utf8PathBuf>,
     header_paths: Vec<Utf8PathBuf>,
     module_paths: Vec<Utf8PathBuf>,
     bundle_name: &str,
@@ -73,6 +74,16 @@ pub fn wrap_as_framework(
         .join(format!("{:?}", platform))
         .join(format!("{}{}", bundle_name, SUFFIX));
     std::fs::create_dir_all(&output_path)?;
+
+    let plist_path = match plist_path {
+        Some(plist_path) => plist_path,
+        None => {
+            let plist = plist::InfoPlistBuilder::new(bundle_name, platform);
+            let plist_path = output_path.join("Info.plist");
+            plist.write(plist_path.as_str())?;
+            plist_path
+        }
+    };
 
     sh.cmd("plutil")
         .args(&[
