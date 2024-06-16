@@ -16,13 +16,8 @@ pub fn get_module_name(conf: &Configuration) -> Result<String> {
 
 fn parse_module_name(content: &str) -> Result<String> {
     let found_start = content.lines().find_map(|line| {
-        if line.starts_with("framework module ") {
-            Some(&line["framework module ".len()..])
-        } else if line.starts_with("module ") {
-            Some(&line["module ".len()..])
-        } else {
-            None
-        }
+        line.strip_prefix("framework module ")
+            .or_else(|| line.strip_prefix("module "))
     });
 
     let Some(found_start) = found_start else {

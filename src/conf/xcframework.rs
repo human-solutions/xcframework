@@ -32,9 +32,9 @@ impl LibType {
     }
 }
 
-impl Into<crate::core::CrateType> for LibType {
-    fn into(self) -> crate::core::CrateType {
-        match self {
+impl From<LibType> for crate::core::CrateType {
+    fn from(lib_type: LibType) -> Self {
+        match lib_type {
             LibType::StaticLib => crate::core::CrateType::Staticlib,
             LibType::CDyLib => crate::core::CrateType::Cdylib,
         }

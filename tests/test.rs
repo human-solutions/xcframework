@@ -45,7 +45,7 @@ fn end_to_end_static() {
         "--manifest-path=examples/end-to-end/mymath-lib/Cargo.toml",
         "--lib-type=staticlib",
         "--target-dir",
-        &target_dir.to_str().unwrap(),
+        target_dir.to_str().unwrap(),
     ]);
 
     let produced = xcframework::build(cli).unwrap();
@@ -80,7 +80,7 @@ fn end_to_end_dynamic() {
         "--manifest-path=examples/end-to-end/mymath-lib/Cargo.toml",
         "--lib-type=cdylib",
         "--target-dir",
-        &target_dir.to_str().unwrap(),
+        target_dir.to_str().unwrap(),
     ]);
 
     let produced = xcframework::build(cli).unwrap();

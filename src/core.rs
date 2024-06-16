@@ -58,13 +58,12 @@ pub fn wrap_as_framework(
     platform: DarwinPlatform,
     crate_type: CrateType,
     lib_path: Utf8PathBuf,
-    plist_path: Option<Utf8PathBuf>,
     header_paths: Vec<Utf8PathBuf>,
     module_paths: Vec<Utf8PathBuf>,
     bundle_name: &str,
     output_dir: Utf8PathBuf,
 ) -> anyhow::Result<Utf8PathBuf> {
-    const SUFFIX: &'static str = ".framework";
+    const SUFFIX: &str = ".framework";
 
     println!("📦 Wrapping {:?} libraries as framework ...", platform);
 
@@ -75,15 +74,9 @@ pub fn wrap_as_framework(
         .join(format!("{}{}", bundle_name, SUFFIX));
     std::fs::create_dir_all(&output_path)?;
 
-    let plist_path = match plist_path {
-        Some(plist_path) => plist_path,
-        None => {
-            let plist = plist::InfoPlistBuilder::new(bundle_name, platform);
-            let plist_path = output_path.join("Info.plist");
-            plist.write(plist_path.as_str())?;
-            plist_path
-        }
-    };
+    let plist = plist::InfoPlistBuilder::new(bundle_name, platform);
+    let plist_path = output_path.join("Info.plist");
+    plist.write(plist_path.as_str())?;
 
     sh.cmd("plutil")
         .args(&[
@@ -140,7 +133,7 @@ pub fn create_xcframework(
     bundle_name: &'static str,
     output_dir: Utf8PathBuf,
 ) -> anyhow::Result<Utf8PathBuf> {
-    const SUFFIX: &'static str = ".xcframework";
+    const SUFFIX: &str = ".xcframework";
 
     println!("🧰 Running create xcframework...");
 

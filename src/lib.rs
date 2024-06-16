@@ -165,7 +165,6 @@ pub fn build(cli: XcCli) -> Result<Produced> {
                 platform,
                 crate_type,
                 lib_path,
-                None,
                 header_paths,
                 module_paths,
                 &bundle_name,
