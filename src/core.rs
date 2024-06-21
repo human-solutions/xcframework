@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use anyhow::Context;
+use anyhow::{Context, Ok};
 use camino::Utf8PathBuf;
 use platform::DarwinPlatform;
 use xshell::{cmd, Shell};
@@ -56,12 +56,12 @@ pub fn lipo_create_platform_libraries(
 /// Dynamic linking on iOS, watchOS, and tvOS requires the XCFramework to contain .framework bundles.
 pub fn wrap_as_framework(
     platform: DarwinPlatform,
-    crate_type: CrateType,
-    lib_path: Utf8PathBuf,
+    crate_type: &CrateType,
+    lib_path: &Utf8PathBuf,
     header_paths: Vec<Utf8PathBuf>,
     module_paths: Vec<Utf8PathBuf>,
     bundle_name: &str,
-    output_dir: Utf8PathBuf,
+    output_dir: &Utf8PathBuf,
 ) -> anyhow::Result<Utf8PathBuf> {
     const SUFFIX: &str = ".framework";
 
@@ -130,8 +130,8 @@ pub fn wrap_as_framework(
 /// Create an XCFramework from the frameworks.
 pub fn create_xcframework(
     framework_paths: Vec<Utf8PathBuf>,
-    bundle_name: &'static str,
-    output_dir: Utf8PathBuf,
+    bundle_name: &str,
+    output_dir: &Utf8PathBuf,
 ) -> anyhow::Result<Utf8PathBuf> {
     const SUFFIX: &str = ".xcframework";
 
@@ -160,9 +160,9 @@ pub fn create_xcframework(
 /// Compress the XCFramework as a zip file.
 pub fn compress_xcframework(
     xcframework_name: Option<String>,
-    xcframework_path: Utf8PathBuf,
+    xcframework_path: &Utf8PathBuf,
     prefix: Option<String>,
-    output_dir: Utf8PathBuf,
+    output_dir: &Utf8PathBuf,
 ) -> anyhow::Result<Utf8PathBuf> {
     println!("📦 Compressing XCFramework ...");
 
@@ -176,7 +176,7 @@ pub fn compress_xcframework(
         None => format!("{}.zip", framework_name),
     };
     let dest = output_dir.join(zip_name);
-    let source = &xcframework_path;
+    let source = xcframework_path;
     zip_extensions::zip_create_from_directory(
         &dest.clone().into_std_path_buf(),
         &source.clone().into_std_path_buf(),

@@ -127,7 +127,7 @@ pub mod ext;
 use crate::conf::Configuration;
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
-use cmd::{cargo, lipo, rustup, xcodebuild, zip};
+use cmd::{cargo, lipo, rustup};
 pub use conf::{XCFrameworkConfiguration, XcCli};
 use ext::PathBufExt;
 
@@ -151,10 +151,13 @@ pub fn build(cli: XcCli) -> Result<Produced> {
     let libs = lipo::assemble_libs(&conf).context("lipo: assembling libraries")?;
 
     let bundle_name = conf.module_name()?;
-    let frameworks = libs
+    let crate_type = match conf.lib_type {
+        conf::LibType::StaticLib => &core::CrateType::Staticlib,
+        conf::LibType::CDyLib => &core::CrateType::Cdylib,
+    };
+    let framework_paths = libs
         .into_iter()
         .filter_map(|(platform, lib_path)| {
-            let crate_type = conf.lib_type.clone().into();
             let include_dir = &conf.cargo_section.include_dir;
             let header_paths = get_header_paths(include_dir).ok()?;
             let module_paths = get_module_paths(include_dir).ok()?;
@@ -164,25 +167,28 @@ pub fn build(cli: XcCli) -> Result<Produced> {
             core::wrap_as_framework(
                 platform,
                 crate_type,
-                lib_path,
+                &lib_path,
                 header_paths,
                 module_paths,
                 &bundle_name,
-                frameworks_dir,
+                &frameworks_dir,
             )
             .ok()
         })
         .collect::<Vec<_>>();
 
-    xcodebuild::assemble(&conf, frameworks).context("xcodebuild - assemble libraries")?;
+    let xcframework_path =
+        crate::core::create_xcframework(framework_paths, &conf.module_name()?, &conf.build_dir)?;
     let module_name = conf.module_name()?;
 
     let (path, is_zipped) = if conf.cargo_section.zip {
-        (zip::xcframework(&conf)?, true)
+        (
+            core::compress_xcframework(None, &xcframework_path, None, &conf.target_dir)?,
+            true,
+        )
     } else {
-        let from = conf.build_dir.join(format!("{module_name}.xcframework"));
         let to = conf.target_dir.join(format!("{module_name}.xcframework"));
-        fs_err::rename(from, &to)?;
+        fs_err::rename(xcframework_path, &to)?;
         (to, false)
     };
 

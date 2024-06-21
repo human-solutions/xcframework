@@ -2,8 +2,6 @@ pub mod cargo;
 pub mod lipo;
 pub mod modulemap;
 pub mod rustup;
-pub mod xcodebuild;
-pub mod zip;
 
 use anyhow::{anyhow, Result};
 use std::process::Command;
