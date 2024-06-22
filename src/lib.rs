@@ -120,9 +120,11 @@
 //! `MACOSX_DEPLOYMENT_TARGET` and `IPHONEOS_DEPLOYMENT_TARGET`. See [apple_base.rs](https://github.com/rust-lang/rust/blob/master/compiler/rustc_target/src/spec/apple_base.rs) for the default values.
 //!
 mod cmd;
-mod conf;
+mod conf; // TODO: deprecate or migrate to focus on parsing cli arguments to config;
+pub mod config;
 pub mod core;
 pub mod ext;
+pub mod ops;
 
 use core::platform::{ApplePlatform, Environment};
 use std::collections::HashMap;
@@ -186,8 +188,8 @@ pub fn build(cli: XcCli) -> Result<Produced> {
 
     let bundle_name = conf.module_name()?;
     let crate_type = match conf.lib_type {
-        conf::LibType::StaticLib => &core::CrateType::Staticlib,
-        conf::LibType::CDyLib => &core::CrateType::Cdylib,
+        conf::LibType::StaticLib => &config::LibType::Staticlib,
+        conf::LibType::CDyLib => &config::LibType::Cdylib,
     };
     let framework_paths = libs
         .into_iter()
@@ -202,8 +204,8 @@ pub fn build(cli: XcCli) -> Result<Produced> {
                 platform,
                 crate_type,
                 &lib_path,
-                header_paths,
-                module_paths,
+                &header_paths,
+                &module_paths,
                 &bundle_name,
                 &frameworks_dir,
             )

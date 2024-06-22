@@ -1,6 +1,8 @@
 use camino::Utf8PathBuf;
 use clap::Parser;
 
+use crate::config::Config;
+
 use super::LibType;
 
 /// Compile a package into a cross-platform Apple XCFramework
@@ -54,4 +56,11 @@ pub struct XcCli {
     /// Path to Cargo.toml.
     #[arg(long, value_name = "PATH")]
     pub manifest_path: Option<Utf8PathBuf>,
+}
+
+impl XcCli {
+    // TODO: Update this to use the new Config struct
+    pub fn to_config(&self) -> Config {
+        Config::default()
+    }
 }

@@ -6,16 +6,11 @@ use fs_err as fs;
 use platform::ApplePlatform;
 use xshell::{cmd, Shell};
 
+use crate::config::LibType;
+
+pub mod build;
 pub mod platform;
 pub mod plist;
-
-/// The frameworks can be static or dynamic.
-/// From rust perspective, it's crate type: cdylib or staticlib.
-#[derive(Debug, Clone, Copy)]
-pub enum CrateType {
-    Cdylib,
-    Staticlib,
-}
 
 /// Create a universal library for each platform using lipo.
 pub fn lipo_create_platform_libraries(
@@ -57,10 +52,10 @@ pub fn lipo_create_platform_libraries(
 /// Dynamic linking on iOS, watchOS, and tvOS requires the XCFramework to contain .framework bundles.
 pub fn wrap_as_framework(
     platform: ApplePlatform,
-    crate_type: &CrateType,
+    crate_type: &LibType,
     lib_path: &Utf8PathBuf,
-    header_paths: Vec<Utf8PathBuf>,
-    module_paths: Vec<Utf8PathBuf>,
+    header_paths: &[Utf8PathBuf],
+    module_paths: &[Utf8PathBuf],
     bundle_name: &str,
     output_dir: &Utf8PathBuf,
 ) -> anyhow::Result<Utf8PathBuf> {
@@ -92,7 +87,7 @@ pub fn wrap_as_framework(
     let to_binary = format!("{}/{}", &output_path, bundle_name);
     fs::copy(lib_path.as_path(), to_binary)?;
 
-    if let CrateType::Cdylib = crate_type {
+    if let LibType::Cdylib = crate_type {
         sh.cmd("install_name_tool")
             .args([
                 "-id",
