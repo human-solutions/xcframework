@@ -124,7 +124,7 @@ mod conf;
 pub mod core;
 pub mod ext;
 
-use core::platform::{DarwinPlatform, Environment};
+use core::platform::{ApplePlatform, Environment};
 use std::collections::HashMap;
 
 use crate::conf::Configuration;
@@ -160,15 +160,15 @@ pub fn build(cli: XcCli) -> Result<Produced> {
         let mut platform_lib_paths = HashMap::new();
         if conf.cargo_section.iOS {
             let lib_paths = lib_paths_for_targets(conf, &conf.cargo_section.iOS_targets)?;
-            platform_lib_paths.insert(DarwinPlatform::IOS(Environment::Device), lib_paths);
+            platform_lib_paths.insert(ApplePlatform::IOS(Environment::Device), lib_paths);
         }
         if conf.cargo_section.simulators {
             let lib_paths = lib_paths_for_targets(conf, &conf.cargo_section.iOS_simulator_targets)?;
-            platform_lib_paths.insert(DarwinPlatform::IOS(Environment::Simulator), lib_paths);
+            platform_lib_paths.insert(ApplePlatform::IOS(Environment::Simulator), lib_paths);
         }
         if conf.cargo_section.macOS {
             let lib_paths = lib_paths_for_targets(conf, &conf.cargo_section.macOS_targets)?;
-            platform_lib_paths.insert(DarwinPlatform::MacOS, lib_paths);
+            platform_lib_paths.insert(ApplePlatform::MacOS, lib_paths);
         }
 
         let ending = conf.lib_type.file_ending();

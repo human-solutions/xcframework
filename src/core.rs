@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use anyhow::{Context, Ok};
 use camino::Utf8PathBuf;
-use platform::DarwinPlatform;
+use platform::ApplePlatform;
 use xshell::{cmd, Shell};
 
 pub mod platform;
@@ -18,10 +18,10 @@ pub enum CrateType {
 
 /// Create a universal library for each platform using lipo.
 pub fn lipo_create_platform_libraries(
-    platform_lib_paths: &HashMap<DarwinPlatform, Vec<Utf8PathBuf>>,
+    platform_lib_paths: &HashMap<ApplePlatform, Vec<Utf8PathBuf>>,
     output_lib_name: &str,
     output_dir: &Utf8PathBuf,
-) -> anyhow::Result<HashMap<DarwinPlatform, Utf8PathBuf>> {
+) -> anyhow::Result<HashMap<ApplePlatform, Utf8PathBuf>> {
     let sh = Shell::new()?;
     std::fs::create_dir_all(output_dir)?;
 
@@ -55,7 +55,7 @@ pub fn lipo_create_platform_libraries(
 /// An XCFramework can include dynamic library files, but only macOS supports these libraries for dynamic linking.
 /// Dynamic linking on iOS, watchOS, and tvOS requires the XCFramework to contain .framework bundles.
 pub fn wrap_as_framework(
-    platform: DarwinPlatform,
+    platform: ApplePlatform,
     crate_type: &CrateType,
     lib_path: &Utf8PathBuf,
     header_paths: Vec<Utf8PathBuf>,

@@ -1,12 +1,12 @@
-use super::platform::DarwinPlatform;
+use super::platform::ApplePlatform;
 
 pub struct InfoPlistBuilder {
     bundle_name: String,
-    platform: DarwinPlatform,
+    platform: ApplePlatform,
 }
 
 impl InfoPlistBuilder {
-    pub fn new(bundle_name: &str, platform: DarwinPlatform) -> Self {
+    pub fn new(bundle_name: &str, platform: ApplePlatform) -> Self {
         Self {
             bundle_name: bundle_name.into(),
             platform,
@@ -18,7 +18,7 @@ impl InfoPlistBuilder {
         self
     }
 
-    pub fn platform(mut self, platform: DarwinPlatform) -> Self {
+    pub fn platform(mut self, platform: ApplePlatform) -> Self {
         self.platform = platform;
         self
     }
