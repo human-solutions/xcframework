@@ -1,5 +1,4 @@
 pub mod cargo;
-pub mod lipo;
 pub mod modulemap;
 pub mod rustup;
 

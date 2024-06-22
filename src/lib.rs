@@ -124,12 +124,16 @@ mod conf;
 pub mod core;
 pub mod ext;
 
+use core::platform::{DarwinPlatform, Environment};
+use std::collections::HashMap;
+
 use crate::conf::Configuration;
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
-use cmd::{cargo, lipo, rustup};
+use cmd::{cargo, rustup};
 pub use conf::{XCFrameworkConfiguration, XcCli};
 use ext::PathBufExt;
+use rustup_configurator::target::Triple;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Produced {
@@ -148,7 +152,36 @@ pub fn build(cli: XcCli) -> Result<Produced> {
     rustup::check_needed(&conf).context("checking rustup targets")?;
     cargo::build(&conf).context("running cargo build")?;
 
-    let libs = lipo::assemble_libs(&conf).context("lipo: assembling libraries")?;
+    let libs = {
+        let conf = &conf;
+        let libs_dir = conf.build_dir.join("libs");
+        fs_err::create_dir_all(&libs_dir)?;
+
+        let mut platform_lib_paths = HashMap::new();
+        if conf.cargo_section.iOS {
+            let lib_paths = lib_paths_for_targets(conf, &conf.cargo_section.iOS_targets)?;
+            platform_lib_paths.insert(DarwinPlatform::IOS(Environment::Device), lib_paths);
+        }
+        if conf.cargo_section.simulators {
+            let lib_paths = lib_paths_for_targets(conf, &conf.cargo_section.iOS_simulator_targets)?;
+            platform_lib_paths.insert(DarwinPlatform::IOS(Environment::Simulator), lib_paths);
+        }
+        if conf.cargo_section.macOS {
+            let lib_paths = lib_paths_for_targets(conf, &conf.cargo_section.macOS_targets)?;
+            platform_lib_paths.insert(DarwinPlatform::MacOS, lib_paths);
+        }
+
+        let ending = conf.lib_type.file_ending();
+        let name = &conf.lib_name.replace('-', "_");
+        let output_lib_name = format!("lib{name}.{ending}");
+
+        crate::core::lipo_create_platform_libraries(
+            &platform_lib_paths,
+            &output_lib_name,
+            &libs_dir,
+        )
+    }
+    .context("lipo: assembling libraries")?;
 
     let bundle_name = conf.module_name()?;
     let crate_type = match conf.lib_type {
@@ -225,6 +258,24 @@ fn get_module_paths(include_dir: &Utf8PathBuf) -> Result<Vec<Utf8PathBuf>> {
         }
     }
     Ok(module_paths)
+}
+
+fn lib_paths_for_targets(conf: &Configuration, targets: &[Triple]) -> Result<Vec<Utf8PathBuf>> {
+    let mut paths = vec![];
+
+    let target_dir = &conf.target_dir;
+    let profile = conf.profile();
+    let ending = conf.lib_type.file_ending();
+    let name = &conf.lib_name.replace('-', "_");
+
+    for target in targets {
+        let path = target_dir
+            .join(target)
+            .join(profile)
+            .join(format!("lib{name}.{ending}"));
+        paths.push(path)
+    }
+    Ok(paths)
 }
 
 #[cfg(test)]
