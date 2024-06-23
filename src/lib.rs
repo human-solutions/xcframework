@@ -133,6 +133,7 @@ use camino::Utf8PathBuf;
 use cmd::{cargo, rustup};
 pub use conf::{XCFrameworkConfiguration, XcCli};
 use ext::PathBufExt;
+use fs_err as fs;
 use rustup_configurator::target::Triple;
 
 #[derive(Debug, PartialEq, Eq)]
@@ -155,7 +156,7 @@ pub fn build(cli: XcCli) -> Result<Produced> {
     let libs = {
         let conf = &conf;
         let libs_dir = conf.build_dir.join("libs");
-        fs_err::create_dir_all(&libs_dir)?;
+        fs::create_dir_all(&libs_dir)?;
 
         let mut platform_lib_paths = HashMap::new();
         if conf.cargo_section.iOS {
@@ -190,12 +191,12 @@ pub fn build(cli: XcCli) -> Result<Produced> {
     };
     let framework_paths = libs
         .into_iter()
-        .filter_map(|(platform, lib_path)| {
+        .map(|(platform, lib_path)| {
             let include_dir = &conf.cargo_section.include_dir;
-            let header_paths = get_header_paths(include_dir).ok()?;
-            let module_paths = get_module_paths(include_dir).ok()?;
+            let header_paths = get_header_paths(include_dir)?;
+            let module_paths = get_module_paths(include_dir)?;
             let frameworks_dir = conf.target_dir.join("frameworks");
-            std::fs::create_dir_all(&frameworks_dir).ok()?;
+            std::fs::create_dir_all(&frameworks_dir)?;
 
             core::wrap_as_framework(
                 platform,
@@ -206,9 +207,8 @@ pub fn build(cli: XcCli) -> Result<Produced> {
                 &bundle_name,
                 &frameworks_dir,
             )
-            .ok()
         })
-        .collect::<Vec<_>>();
+        .collect::<anyhow::Result<Vec<_>>>()?;
 
     let xcframework_path =
         crate::core::create_xcframework(framework_paths, &conf.module_name()?, &conf.build_dir)?;
@@ -221,7 +221,10 @@ pub fn build(cli: XcCli) -> Result<Produced> {
         )
     } else {
         let to = conf.target_dir.join(format!("{module_name}.xcframework"));
-        fs_err::rename(xcframework_path, &to)?;
+        if to.exists() {
+            fs::remove_dir_all(&to)?;
+        }
+        fs::rename(xcframework_path, &to)?;
         (to, false)
     };
 

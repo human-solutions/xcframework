@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use anyhow::{Context, Ok};
 use camino::Utf8PathBuf;
+use fs_err as fs;
 use platform::ApplePlatform;
 use xshell::{cmd, Shell};
 
@@ -23,7 +24,7 @@ pub fn lipo_create_platform_libraries(
     output_dir: &Utf8PathBuf,
 ) -> anyhow::Result<HashMap<ApplePlatform, Utf8PathBuf>> {
     let sh = Shell::new()?;
-    std::fs::create_dir_all(output_dir)?;
+    fs::create_dir_all(output_dir)?;
 
     let mut libs = HashMap::new();
     for (platform, paths) in platform_lib_paths.iter() {
@@ -33,7 +34,7 @@ pub fn lipo_create_platform_libraries(
             continue;
         }
         let platform_dir = output_dir.join(format!("{:?}", platform));
-        std::fs::create_dir_all(&platform_dir)?;
+        fs::create_dir_all(&platform_dir)?;
         let output_path = platform_dir.join(output_lib_name);
 
         let mut cmd = cmd!(sh, "lipo -create");
@@ -72,7 +73,7 @@ pub fn wrap_as_framework(
     let output_path = output_dir
         .join(format!("{:?}", platform))
         .join(format!("{}{}", bundle_name, SUFFIX));
-    std::fs::create_dir_all(&output_path)?;
+    fs::create_dir_all(&output_path)?;
 
     let plist = plist::InfoPlistBuilder::new(bundle_name, platform);
     let plist_path = output_path.join("Info.plist");
@@ -89,7 +90,7 @@ pub fn wrap_as_framework(
         .run()?;
 
     let to_binary = format!("{}/{}", &output_path, bundle_name);
-    std::fs::copy(lib_path.as_path(), to_binary)?;
+    fs::copy(lib_path.as_path(), to_binary)?;
 
     if let CrateType::Cdylib = crate_type {
         sh.cmd("install_name_tool")
@@ -101,12 +102,12 @@ pub fn wrap_as_framework(
             .output()?;
     }
 
-    std::fs::create_dir_all(format!("{}/Headers", &output_path))?;
-    std::fs::create_dir_all(format!("{}/Modules", &output_path))?;
+    fs::create_dir_all(format!("{}/Headers", &output_path))?;
+    fs::create_dir_all(format!("{}/Modules", &output_path))?;
 
     for header_path in header_paths.iter() {
         let header_name = header_path.file_name().context("header path error")?;
-        std::fs::copy(
+        fs::copy(
             header_path,
             format!("{}/Headers/{}", output_path, header_name),
         )?;
@@ -114,7 +115,7 @@ pub fn wrap_as_framework(
 
     for module_path in module_paths.iter() {
         let module_name = module_path.file_name().context("module path error")?;
-        std::fs::copy(
+        fs::copy(
             module_path,
             format!("{}/Modules/{}", output_path, module_name),
         )?;
@@ -142,7 +143,7 @@ pub fn create_xcframework(
     let xcframework_path = output_dir.join(format!("{}{}", bundle_name, SUFFIX));
 
     if xcframework_path.exists() {
-        std::fs::remove_dir_all(&xcframework_path)?;
+        fs::remove_dir_all(&xcframework_path)?;
     }
 
     let mut cmd = sh.cmd("xcrun").args(["xcodebuild", "-create-xcframework"]);
