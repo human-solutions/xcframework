@@ -100,6 +100,62 @@ fn end_to_end_dynamic() {
     assert_eq!("MyMath.rust_add(4 + 2) = 6\n", output);
 }
 
+#[test]
+#[ignore = "FIXME: not work on CI"]
+fn multi_platform_static() {
+    let out_dir = create_output_dir("multi-platform-static");
+    let target_dir = out_dir.join("mymath-lib/target");
+    fs::create_dir_all(&target_dir).unwrap();
+    let cli = XcCli::parse_from([
+        "cargo-xcframework",
+        "--manifest-path=examples/multi-platform/mymath-lib/Cargo.toml",
+        "--lib-type=staticlib",
+        "--target-dir",
+        target_dir.to_str().unwrap(),
+    ]);
+    let produced = xcframework::build(cli).unwrap();
+    assert_eq!(produced.module_name, "MyMath");
+    let tuist_workspace_dir = cp_tuist_workspace(out_dir.as_path()).unwrap();
+    let cmd = Command::new("tuist")
+        .current_dir(&tuist_workspace_dir)
+        .arg("test")
+        .output()
+        .unwrap();
+    assert!(cmd.status.success());
+    if !cmd.status.success() {
+        eprintln!("{}", String::from_utf8_lossy(&cmd.stdout));
+        eprintln!("{}", String::from_utf8_lossy(&cmd.stderr));
+    }
+}
+
+#[test]
+#[ignore = "FIXME: not work on CI"]
+fn multi_platform_dynamic() {
+    let out_dir = create_output_dir("multi-platform-dynamic");
+    let target_dir = out_dir.join("mymath-lib/target");
+    fs::create_dir_all(&target_dir).unwrap();
+    let cli = XcCli::parse_from([
+        "cargo-xcframework",
+        "--manifest-path=examples/multi-platform/mymath-lib/Cargo.toml",
+        "--lib-type=cdylib",
+        "--target-dir",
+        target_dir.to_str().unwrap(),
+    ]);
+    let produced = xcframework::build(cli).unwrap();
+    assert_eq!(produced.module_name, "MyMath");
+    let tuist_workspace_dir = cp_tuist_workspace(out_dir.as_path()).unwrap();
+    let cmd = Command::new("tuist")
+        .current_dir(&tuist_workspace_dir)
+        .arg("test")
+        .output()
+        .unwrap();
+    assert!(cmd.status.success());
+    if !cmd.status.success() {
+        eprintln!("{}", String::from_utf8_lossy(&cmd.stdout));
+        eprintln!("{}", String::from_utf8_lossy(&cmd.stderr));
+    }
+}
+
 fn cp_swift_exe(dest: &Path) -> Result<Utf8PathBuf> {
     let from = Utf8PathBuf::from("examples/end-to-end/swift-exe");
 
@@ -113,4 +169,12 @@ fn cp_swift_exe(dest: &Path) -> Result<Utf8PathBuf> {
         fs::remove_dir_all(build_tmp)?;
     }
     Ok(dest.join("swift-exe"))
+}
+
+fn cp_tuist_workspace(dest: &Path) -> Result<Utf8PathBuf> {
+    let from = Utf8PathBuf::from("examples/multi-platform/tuist-workspace");
+    let dest = Utf8PathBuf::from_path_buf(dest.to_path_buf()).unwrap();
+    dest.create_dir_all_if_needed()?;
+    fs_extra::dir::copy(from, &dest, &fs_extra::dir::CopyOptions::new())?;
+    Ok(dest.join("tuist-workspace"))
 }
