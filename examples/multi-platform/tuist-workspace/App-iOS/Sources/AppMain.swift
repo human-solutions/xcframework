@@ -1,5 +1,6 @@
 import SwiftUI
 import MyMath
+import Shared
 
 @main
 struct TuistIosApp: App {
