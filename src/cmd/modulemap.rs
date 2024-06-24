@@ -15,10 +15,10 @@ pub fn get_module_name(conf: &Configuration) -> Result<String> {
 }
 
 fn parse_module_name(content: &str) -> Result<String> {
-    const MOD_LEN: usize = "module ".len();
-    let found_start = content
-        .lines()
-        .find_map(|line| line.starts_with("module ").then(|| &line[MOD_LEN..]));
+    let found_start = content.lines().find_map(|line| {
+        line.strip_prefix("framework module ")
+            .or_else(|| line.strip_prefix("module "))
+    });
 
     let Some(found_start) = found_start else {
         bail!("No 'module' declaration found");

@@ -9,8 +9,6 @@ use super::{LibType, XCFrameworkConfiguration};
 
 #[derive(Debug)]
 pub struct Configuration {
-    /// Root dir of the project
-    pub dir: Utf8PathBuf,
     pub cargo_section: XCFrameworkConfiguration,
     pub cli: XcCli,
     pub lib_type: LibType,
@@ -88,7 +86,6 @@ impl Configuration {
         }
 
         Ok(Self {
-            dir,
             cargo_section: xc_conf,
             cli,
             lib_type,

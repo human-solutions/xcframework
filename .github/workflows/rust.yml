@@ -12,13 +12,21 @@ env:
 jobs:
   build:
     runs-on: macos-latest
-
     steps:
       - uses: actions/checkout@v3
       - name: rustup target add
         run: rustup target add aarch64-apple-darwin aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios
       - name: Build
         run: cargo build --verbose
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: jdx/mise-action@v2
+        with:
+          mise_toml: |
+            [tools]
+            tuist = "4.17.0"
       - name: Run tests
         run: cargo test --verbose
   fmt_and_clippy:
