@@ -4,6 +4,8 @@ use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use serde::{Deserialize, Serialize};
 
+use crate::XcCli;
+
 mod core;
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]
@@ -150,13 +152,15 @@ struct CargoMetadata {
     xcframework: Option<Config>,
 }
 
-pub fn load_package_config(pkg: &cargo_metadata::Package) -> Result<Config> {
+pub fn load_package_config(cli: &XcCli, pkg: &cargo_metadata::Package) -> Result<Config> {
     let manifest_path = pkg.manifest_path.as_std_path();
 
     let mut xcframework_config = Config::default();
 
     let cfg = resolve_config(manifest_path)?;
     xcframework_config.update(&cfg);
+
+    xcframework_config.update(&cli.to_config());
 
     Ok(xcframework_config)
 }

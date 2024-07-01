@@ -1,6 +1,6 @@
 use std::io;
 
-use crate::conf::Configuration;
+use crate::cli::Configuration;
 use anyhow::{bail, Context, Result};
 use fs_err::File;
 

@@ -12,7 +12,7 @@ pub struct Target {
 }
 
 impl LibType {
-    fn ext(&self) -> &str {
+    pub fn ext(&self) -> &str {
         match self {
             LibType::Staticlib => "a",
             LibType::Cdylib => "dylib",
@@ -35,26 +35,26 @@ pub fn build_targets(
     let metadata = cargo_metadata::MetadataCommand::new().exec()?;
     let target_dir = metadata.target_directory;
 
-    if sequentially {
-        for target in targets.iter().map(|t| t.triple.as_str()) {
-            println!("🔨 Building for {target}, profile: {profile}");
-            sh.cmd("cargo")
-                .arg("build")
-                .args(["-p", pkg])
-                .args(["--target", target])
-                .args(["--profile", profile])
-                .run()?;
-        }
-    } else {
-        let mut cmd = sh.cmd("cargo").arg("build").args(["-p", pkg]);
-        for target in targets.iter().map(|t| t.triple.as_str()) {
-            cmd = cmd.arg("--target").arg(target);
-        }
-        cmd = cmd.arg("--profile").arg(profile);
-
-        println!("🔨  Building for {} targets", targets.len());
-        cmd.run()?;
-    }
+    // if sequentially {
+    //     for target in targets.iter().map(|t| t.triple.as_str()) {
+    //         println!("🔨 Building for {target}, profile: {profile}");
+    //         sh.cmd("cargo")
+    //             .arg("build")
+    //             .args(["-p", pkg])
+    //             .args(["--target", target])
+    //             .args(["--profile", profile])
+    //             .run()?;
+    //     }
+    // } else {
+    //     let mut cmd = sh.cmd("cargo").arg("build").args(["-p", pkg]);
+    //     for target in targets.iter().map(|t| t.triple.as_str()) {
+    //         cmd = cmd.arg("--target").arg(target);
+    //     }
+    //     cmd = cmd.arg("--profile").arg(profile);
+    //
+    //     println!("🔨  Building for {} targets", targets.len());
+    //     cmd.run()?;
+    // }
 
     let libname = format!("lib{libname}.{}", lib_type.ext());
     let mut platform_build_paths = HashMap::new();
@@ -69,7 +69,7 @@ pub fn build_targets(
     Ok(platform_build_paths)
 }
 
-fn lib_path_for_target(
+pub fn lib_path_for_target(
     target_dir: &Utf8PathBuf,
     triple: &str,
     profile: &str,

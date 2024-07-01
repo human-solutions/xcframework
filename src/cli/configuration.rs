@@ -24,11 +24,9 @@ pub struct Configuration {
 
 impl Configuration {
     pub fn load(mut cli: XcCli) -> Result<Self> {
-        let manifest_path = cli
-            .manifest_path
-            .clone()
-            .unwrap_or_else(|| Utf8PathBuf::from("Cargo.toml"));
-        let mut dir = manifest_path.clone();
+        let manifest_path = cli.clap_cargo.manifest_path()?;
+        let mut dir =
+            Utf8PathBuf::from_path_buf(manifest_path.clone()).expect("manifest_path is valid");
         dir.pop();
 
         let target_dir = cli.target_dir.clone().unwrap_or_else(|| dir.join("target"));
@@ -41,12 +39,8 @@ impl Configuration {
             anyhow::bail!("Could not find root package in metadata");
         };
 
-        let staticlib = package.targets.iter().find(|t| {
-            t.kind.contains(&"staticlib".to_string()) || t.kind.contains(&"staticlib".to_string())
-        });
-        let dylib = package.targets.iter().find(|t| {
-            t.kind.contains(&"cdylib".to_string()) || t.kind.contains(&"cdylib".to_string())
-        });
+        let staticlib = package.targets.iter().find(|t| t.is_staticlib());
+        let dylib = package.targets.iter().find(|t| t.is_cdylib());
 
         let xc_conf = XCFrameworkConfiguration::parse(&package.metadata, &dir)?;
 
@@ -108,10 +102,6 @@ impl Configuration {
     }
 
     pub fn profile(&self) -> &str {
-        if self.cli.release {
-            "release"
-        } else {
-            self.cli.profile.as_deref().unwrap_or("debug")
-        }
+        self.cli.clap_cargo.cargo_build.profile()
     }
 }

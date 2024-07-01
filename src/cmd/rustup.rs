@@ -1,6 +1,6 @@
 use std::process::exit;
 
-use crate::conf::Configuration;
+use crate::cli::Configuration;
 use anyhow::{bail, Result};
 use dialoguer::Confirm;
 
