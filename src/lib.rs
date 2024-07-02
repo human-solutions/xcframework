@@ -120,18 +120,23 @@
 //! `MACOSX_DEPLOYMENT_TARGET` and `IPHONEOS_DEPLOYMENT_TARGET`. See [apple_base.rs](https://github.com/rust-lang/rust/blob/master/compiler/rustc_target/src/spec/apple_base.rs) for the default values.
 //!
 mod cmd;
-mod conf;
+
+pub mod config;
 pub mod core;
 pub mod ext;
+pub mod ops;
+
+#[cfg(feature = "cli")]
+mod cli; // TODO: deprecate or migrate to focus on parsing cli arguments to config;
 
 use core::platform::{ApplePlatform, Environment};
 use std::collections::HashMap;
 
-use crate::conf::Configuration;
+use crate::cli::Configuration;
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
+pub use cli::{XCFrameworkConfiguration, XcCli};
 use cmd::{cargo, rustup};
-pub use conf::{XCFrameworkConfiguration, XcCli};
 use ext::PathBufExt;
 use fs_err as fs;
 use rustup_configurator::target::Triple;
@@ -144,6 +149,18 @@ pub struct Produced {
 }
 
 pub fn build(cli: XcCli) -> Result<Produced> {
+    let metadata = cargo_metadata::MetadataCommand::new()
+        .manifest_path(&cli.clap_cargo.manifest_path()?)
+        .exec()
+        .context("cargo metadata")?;
+    let package = metadata.root_package().context("no package")?;
+    if let Ok(config) = config::load_package_config(&cli, package) {
+        let res = ops::cargo::build(&cli, config, &metadata)?;
+        return Ok(res);
+    }
+
+    // unreachable!("will remove");
+
     let conf = Configuration::load(cli).context("loading configuration")?;
 
     conf.build_dir
@@ -186,8 +203,8 @@ pub fn build(cli: XcCli) -> Result<Produced> {
 
     let bundle_name = conf.module_name()?;
     let crate_type = match conf.lib_type {
-        conf::LibType::StaticLib => &core::CrateType::Staticlib,
-        conf::LibType::CDyLib => &core::CrateType::Cdylib,
+        cli::LibType::StaticLib => &config::LibType::Staticlib,
+        cli::LibType::CDyLib => &config::LibType::Cdylib,
     };
     let framework_paths = libs
         .into_iter()
@@ -202,8 +219,8 @@ pub fn build(cli: XcCli) -> Result<Produced> {
                 platform,
                 crate_type,
                 &lib_path,
-                header_paths,
-                module_paths,
+                &header_paths,
+                &module_paths,
                 &bundle_name,
                 &frameworks_dir,
             )
