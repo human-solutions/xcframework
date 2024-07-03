@@ -1,9 +1,24 @@
+use std::process::exit;
+
+use anyhow::{bail, Result};
+use dialoguer::Confirm;
+
 use crate::core::{
     build::Target,
+    modulemap,
     platform::{ApplePlatform, Environment, EnvironmentWithoutCatalyst},
 };
 
-use super::{Architecture, Config, SupportedTargetPlatform};
+use super::{Architecture, Config, LibType, SupportedTargetPlatform};
+
+impl LibType {
+    pub fn ext(&self) -> &str {
+        match self {
+            LibType::Staticlib => "a",
+            LibType::Cdylib => "dylib",
+        }
+    }
+}
 
 impl Config {
     pub fn targets(&self) -> Vec<Target> {
@@ -23,6 +38,49 @@ impl Config {
             }
         }
         targets
+    }
+
+    pub fn module_name(&self) -> Result<String> {
+        if let Some(name) = self.module_name.clone() {
+            Ok(name)
+        } else {
+            let mm_path = self.include_dir.join("module.modulemap");
+            let name = modulemap::get_module_name(&mm_path)?;
+            Ok(name)
+        }
+    }
+
+    pub fn check_rustup(&self) -> Result<()> {
+        let targets = rustup_configurator::target::list()?;
+
+        let mut to_install = vec![];
+        for needed_target in self.targets() {
+            let Some(target) = targets.iter().find(|t| t.triple == *needed_target.triple) else {
+                bail!("Target {} is not supported by rustup", needed_target.triple)
+            };
+
+            if !target.installed {
+                to_install.push(target.triple.clone());
+            }
+        }
+        if !to_install.is_empty() {
+            let do_install = Confirm::new()
+                .with_prompt(format!(
+                    "The targets {} are missing, do you want to install them?",
+                    to_install
+                        .iter()
+                        .map(|t| t.to_string())
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                ))
+                .interact()?;
+            if do_install {
+                rustup_configurator::target::install(&to_install)?
+            } else {
+                exit(1);
+            }
+        }
+        Ok(())
     }
 }
 

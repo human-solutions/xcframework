@@ -10,9 +10,8 @@ crate-type = ["staticlib", "cdylib"]
 [package.metadata.xcframework]
 lib-type = "staticlib"
 include-dir = "include"
-iOS = true
+iOS = { simulator = true }
 macOS = true
-simulators = true
 
 [profile.release]
 lto = true

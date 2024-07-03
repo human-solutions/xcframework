@@ -1,16 +1,13 @@
-use std::io;
-
-use crate::cli::Configuration;
 use anyhow::{bail, Context, Result};
+use camino::Utf8PathBuf;
 use fs_err::File;
 
-pub fn get_module_name(conf: &Configuration) -> Result<String> {
-    let mm = conf.cargo_section.include_dir.join("module.modulemap");
-    let file = File::open(&mm)?;
-    let content = io::read_to_string(&file)?;
+pub fn get_module_name(mm_path: &Utf8PathBuf) -> Result<String> {
+    let file = File::open(mm_path)?;
+    let content = std::io::read_to_string(&file)?;
 
     parse_module_name(&content).context(format!(
-        "Failed to parse module name from modulemap file: {mm}"
+        "Failed to parse module name from modulemap file: {mm_path}"
     ))
 }
 

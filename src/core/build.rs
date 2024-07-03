@@ -11,17 +11,14 @@ pub struct Target {
     pub platform: ApplePlatform,
 }
 
-impl LibType {
-    pub fn ext(&self) -> &str {
-        match self {
-            LibType::Staticlib => "a",
-            LibType::Cdylib => "dylib",
-        }
-    }
+fn cargo_command() -> std::process::Command {
+    let program = std::env::var("CARGO").unwrap_or_else(|_| "cargo".to_owned());
+    std::process::Command::new(program)
 }
 
 /// Builds libraries for the specified targets and profile.
 pub fn build_targets(
+    metadata: cargo_metadata::MetadataCommand,
     pkg: &str,
     libname: &str,
     profile: &str,
@@ -29,32 +26,46 @@ pub fn build_targets(
     targets: Vec<Target>,
     sequentially: bool,
 ) -> Result<HashMap<ApplePlatform, Vec<Utf8PathBuf>>> {
-    let sh = xshell::Shell::new()?;
     // TODO: Extract
     // Optimize: Consider using cargo_metadata crate to avoid running cargo build and parsing the output
-    let metadata = cargo_metadata::MetadataCommand::new().exec()?;
-    let target_dir = metadata.target_directory;
 
-    // if sequentially {
-    //     for target in targets.iter().map(|t| t.triple.as_str()) {
-    //         println!("🔨 Building for {target}, profile: {profile}");
-    //         sh.cmd("cargo")
-    //             .arg("build")
-    //             .args(["-p", pkg])
-    //             .args(["--target", target])
-    //             .args(["--profile", profile])
-    //             .run()?;
-    //     }
-    // } else {
-    //     let mut cmd = sh.cmd("cargo").arg("build").args(["-p", pkg]);
-    //     for target in targets.iter().map(|t| t.triple.as_str()) {
-    //         cmd = cmd.arg("--target").arg(target);
-    //     }
-    //     cmd = cmd.arg("--profile").arg(profile);
-    //
-    //     println!("🔨  Building for {} targets", targets.len());
-    //     cmd.run()?;
-    // }
+    let mut cargo_command = cargo_command();
+    let target_dir = metadata.exec()?.target_directory;
+
+    if sequentially {
+        for target in targets.iter().map(|t| t.triple.as_str()) {
+            println!("🔨 Building for {target}, profile: {profile}");
+            // sh.cmd("cargo")
+            //     .arg("build")
+            //     .args(["--manifest-path", manifaest_path])
+            //     .args(["-p", pkg])
+            //     .args(["--target", target])
+            //     .args(["--profile", profile])
+            //     .run()?;
+
+            cargo_command
+                .arg("build")
+                .args(["-p", pkg])
+                .args(["--target", target])
+                .args(["--profile", profile])
+                .output()?;
+        }
+    } else {
+        // let mut cmd = sh
+        //     .cmd("cargo")
+        //     .arg("build")
+        //     .args(["--manifest-path", manifaest_path])
+        //     .args(["-p", pkg]);
+        let mut cmd = cargo_command.arg("build").args(["-p", pkg]);
+        for target in targets.iter().map(|t| t.triple.as_str()) {
+            cmd = cmd.arg("--target").arg(target);
+        }
+        cmd = cmd.arg("--profile").arg(profile);
+
+        println!("🔨  Building for {} targets", targets.len());
+        println!("cmd: {:?}", cmd);
+        cmd.output()?;
+    }
 
     let libname = format!("lib{libname}.{}", lib_type.ext());
     let mut platform_build_paths = HashMap::new();

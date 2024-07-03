@@ -4,9 +4,7 @@ use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use serde::{Deserialize, Serialize};
 
-use crate::XcCli;
-
-mod core;
+mod internal;
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -65,7 +63,7 @@ impl TargetPlatformConfig {
 
 /// The frameworks can be static or dynamic.
 /// From rust perspective, it's crate type: cdylib or staticlib.
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, PartialEq, Eq, Deserialize, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum LibType {
     #[default]
@@ -74,23 +72,32 @@ pub enum LibType {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "kebab-case")]
 pub struct Config {
-    pub name: Option<String>,
+    /// Name of the module, as defined in the modulemap. Used for naming the XCframework
+    pub module_name: Option<String>,
+    /// The include directory containing the headers and the module.modulemap file
+    #[serde(default, alias = "include-dir")]
+    pub include_dir: Utf8PathBuf,
     #[serde(alias = "lib-type")]
-    pub lib_type: LibType,
-    pub output_dir: Option<Utf8PathBuf>,
+    pub lib_type: Option<LibType>,
+    #[serde(flatten)]
     pub platforms: HashMap<SupportedTargetPlatform, TargetPlatformConfigVariant>,
+
+    pub output_dir: Option<Utf8PathBuf>,
+    /// Whether to zip the resulting XCFramework
     #[serde(default)]
-    pub header_paths: Vec<Utf8PathBuf>,
-    #[serde(default)]
-    pub module_paths: Vec<Utf8PathBuf>,
+    pub zip: bool,
 }
 
 impl Config {
     pub fn update(&mut self, source: &Config) {
-        if let Some(name) = &source.name {
-            self.name = Some(name.clone());
+        if let Some(module_name) = &source.module_name {
+            self.module_name = Some(module_name.clone());
+        }
+        self.include_dir = source.include_dir.clone();
+        if let Some(lib_type) = &source.lib_type {
+            self.lib_type = Some(lib_type.clone());
         }
         if let Some(output_dir) = &source.output_dir {
             self.output_dir = Some(output_dir.clone());
@@ -98,8 +105,8 @@ impl Config {
         for (key, value) in &source.platforms {
             self.platforms.insert(key.clone(), value.clone());
         }
-        self.header_paths.extend(source.header_paths.clone());
-        self.module_paths.extend(source.module_paths.clone());
+        // self.module = source.module.clone();
+        self.zip = source.zip;
     }
 }
 
@@ -152,15 +159,13 @@ struct CargoMetadata {
     xcframework: Option<Config>,
 }
 
-pub fn load_package_config(cli: &XcCli, pkg: &cargo_metadata::Package) -> Result<Config> {
+pub fn load_package_config(pkg: &cargo_metadata::Package) -> Result<Config> {
     let manifest_path = pkg.manifest_path.as_std_path();
 
     let mut xcframework_config = Config::default();
 
     let cfg = resolve_config(manifest_path)?;
     xcframework_config.update(&cfg);
-
-    xcframework_config.update(&cli.to_config());
 
     Ok(xcframework_config)
 }

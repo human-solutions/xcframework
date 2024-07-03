@@ -9,6 +9,7 @@ use xshell::{cmd, Shell};
 use crate::config::LibType;
 
 pub mod build;
+pub mod modulemap;
 pub mod platform;
 pub mod plist;
 
@@ -31,6 +32,9 @@ pub fn lipo_create_platform_libraries(
         let platform_dir = output_dir.join(format!("{:?}", platform));
         fs::create_dir_all(&platform_dir)?;
         let output_path = platform_dir.join(output_lib_name);
+        if output_path.exists() {
+            fs::remove_file(&output_path)?;
+        }
 
         let mut cmd = cmd!(sh, "lipo -create");
         for path in paths {
@@ -84,7 +88,10 @@ pub fn wrap_as_framework(
         ])
         .run()?;
 
-    let to_binary = format!("{}/{}", &output_path, bundle_name);
+    let to_binary = output_path.join(bundle_name);
+    if to_binary.exists() {
+        fs::remove_file(&to_binary)?;
+    }
     fs::copy(lib_path.as_path(), to_binary)?;
 
     if let LibType::Cdylib = crate_type {
