@@ -10,6 +10,6 @@ crate-type = ["cdylib"]
 
 [package.metadata.xcframework]
 include-dir = "src/include"
-iOS = true
-macOS = true
-simulators = true
+ios = true
+macos = true
+

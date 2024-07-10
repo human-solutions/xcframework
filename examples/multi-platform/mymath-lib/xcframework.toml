@@ -1,0 +1,9 @@
+name = "MyMath"
+lib-type = "cdylib"
+header_paths = ["include/mymath.h"]
+module_paths = ["include/module.modulemap"]
+output_dir = "../tuist-workspace/Shared"
+
+[platforms]
+ios = {}
+macos = true
