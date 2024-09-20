@@ -1,6 +1,5 @@
 pub mod cargo;
 pub mod modulemap;
-pub mod rustup;
 
 use anyhow::{anyhow, Result};
 use std::process::Command;
