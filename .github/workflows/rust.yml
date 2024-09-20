@@ -13,7 +13,7 @@ jobs:
   build:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: rustup target add
         run: rustup target add aarch64-apple-darwin aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios
       - name: Build
@@ -21,7 +21,7 @@ jobs:
   test:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: jdx/mise-action@v2
         with:
           mise_toml: |
@@ -32,7 +32,7 @@ jobs:
   fmt_and_clippy:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Build
         run: cargo fmt --check
       - name: Run tests
