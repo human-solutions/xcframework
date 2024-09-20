@@ -1,22 +1,20 @@
 use anyhow::Result;
 use camino::Utf8PathBuf;
-use clap::Parser;
 use fs_err as fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use xcframework::ext::PathBufExt;
-use xcframework::XcCli;
+use xcframework::CliArgs;
 
+fn args(vec: &[&str]) -> CliArgs {
+    CliArgs::from_vec(vec.iter().map(|s| s.into()).collect()).unwrap()
+}
 #[test]
 fn test_hello() {
     // FIXME: if needed targets missing, it will block running the test by interactive prompt
     // WORKAROUND: config `rust-toolchain.toml`, prepare the targets fisrt
 
-    let cli = XcCli::parse_from([
-        "cargo-xcframework",
-        "--quiet",
-        "--manifest-path=tests/project/Cargo.toml",
-    ]);
+    let cli = args(&["--quiet", "--manifest-path", "tests/project/Cargo.toml"]);
 
     let produced = xcframework::build(cli).unwrap();
     assert!(produced.is_zipped);
@@ -39,11 +37,12 @@ fn end_to_end_static() {
     let target_dir = out_dir.join("mymath-lib/target");
     fs::create_dir_all(&target_dir).unwrap();
 
-    let cli = XcCli::parse_from([
-        "cargo-xcframework",
+    let cli = args(&[
         "--quiet",
-        "--manifest-path=examples/end-to-end/mymath-lib/Cargo.toml",
-        "--lib-type=staticlib",
+        "--manifest-path",
+        "examples/end-to-end/mymath-lib/Cargo.toml",
+        "--lib-type",
+        "staticlib",
         "--target-dir",
         target_dir.to_str().unwrap(),
     ]);
@@ -74,11 +73,12 @@ fn end_to_end_dynamic() {
     let target_dir = out_dir.join("mymath-lib/target");
     fs::create_dir_all(&target_dir).unwrap();
 
-    let cli = XcCli::parse_from([
-        "cargo-xcframework",
+    let cli = args(&[
         "--quiet",
-        "--manifest-path=examples/end-to-end/mymath-lib/Cargo.toml",
-        "--lib-type=cdylib",
+        "--manifest-path",
+        "examples/end-to-end/mymath-lib/Cargo.toml",
+        "--lib-type",
+        "cdylib",
         "--target-dir",
         target_dir.to_str().unwrap(),
     ]);
@@ -106,10 +106,11 @@ fn multi_platform_static() {
     let out_dir = create_output_dir("multi-platform-static");
     let target_dir = out_dir.join("mymath-lib/target");
     fs::create_dir_all(&target_dir).unwrap();
-    let cli = XcCli::parse_from([
-        "cargo-xcframework",
-        "--manifest-path=examples/multi-platform/mymath-lib/Cargo.toml",
-        "--lib-type=staticlib",
+    let cli = args(&[
+        "--manifest-path",
+        "examples/multi-platform/mymath-lib/Cargo.toml",
+        "--lib-type",
+        "staticlib",
         "--target-dir",
         target_dir.to_str().unwrap(),
     ]);
@@ -134,10 +135,11 @@ fn multi_platform_dynamic() {
     let out_dir = create_output_dir("multi-platform-dynamic");
     let target_dir = out_dir.join("mymath-lib/target");
     fs::create_dir_all(&target_dir).unwrap();
-    let cli = XcCli::parse_from([
-        "cargo-xcframework",
-        "--manifest-path=examples/multi-platform/mymath-lib/Cargo.toml",
-        "--lib-type=cdylib",
+    let cli = args(&[
+        "--manifest-path",
+        "examples/multi-platform/mymath-lib/Cargo.toml",
+        "--lib-type",
+        "cdylib",
         "--target-dir",
         target_dir.to_str().unwrap(),
     ]);

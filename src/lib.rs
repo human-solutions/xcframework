@@ -11,8 +11,9 @@ use crate::conf::Configuration;
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use cmd::cargo;
+pub use conf::CliArgs;
 use conf::Target;
-pub use conf::{XCFrameworkConfiguration, XcCli};
+pub use conf::XCFrameworkConfiguration;
 use ext::PathBufExt;
 use fs_err as fs;
 
@@ -23,7 +24,7 @@ pub struct Produced {
     pub is_zipped: bool,
 }
 
-pub fn build(cli: XcCli) -> Result<Produced> {
+pub fn build(cli: CliArgs) -> Result<Produced> {
     let conf = Configuration::load(cli).context("loading configuration")?;
 
     conf.build_dir
