@@ -1,19 +1,9 @@
 #![allow(non_snake_case)]
 
-use std::str::FromStr;
-
+use super::Target;
 use anyhow::{bail, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
-use rustup_configurator::target::Triple;
 use serde::Deserialize;
-
-use crate::ext::TripleExt;
-
-lazy_static::lazy_static! {
-    static ref IOS_DEFAULT: Vec<Triple> = vec!["aarch64-apple-ios".into()];
-    static ref IOS_SIM_DEFAULT: Vec<Triple> =vec!["aarch64-apple-ios-sim".into(), "x86_64-apple-ios".into()];
-    static ref MACOS_DEFAULT: Vec<Triple> = vec!["x86_64-apple-darwin".into(), "aarch64-apple-darwin".into()];
-}
 
 #[derive(Deserialize, Debug, Clone, clap::ValueEnum, PartialEq, Eq)]
 #[clap(rename_all = "lower")]
@@ -53,8 +43,8 @@ pub struct XCFrameworkConfiguration {
     #[serde(default)]
     pub macOS: bool,
 
-    #[serde(default = "macOS_default")]
-    pub macOS_targets: Vec<Triple>,
+    #[serde(default = "Target::default_macos")]
+    pub macOS_targets: Vec<Target>,
 
     #[serde(default)]
     pub simulators: bool,
@@ -62,31 +52,19 @@ pub struct XCFrameworkConfiguration {
     #[serde(default)]
     pub iOS: bool,
 
-    #[serde(default = "iOS_targets")]
-    pub iOS_targets: Vec<Triple>,
+    #[serde(default = "Target::default_ios")]
+    pub iOS_targets: Vec<Target>,
 
-    #[serde(default = "iOS_sim_targets")]
-    pub iOS_simulator_targets: Vec<Triple>,
+    #[serde(default = "Target::default_ios_sim")]
+    pub iOS_simulator_targets: Vec<Target>,
 }
 
 pub fn zip_default() -> bool {
     true
 }
 
-pub fn macOS_default() -> Vec<Triple> {
-    MACOS_DEFAULT.clone()
-}
-
-fn iOS_targets() -> Vec<Triple> {
-    IOS_DEFAULT.clone()
-}
-
-fn iOS_sim_targets() -> Vec<Triple> {
-    IOS_SIM_DEFAULT.clone()
-}
-
 impl XCFrameworkConfiguration {
-    pub fn chosen_targets(&self) -> Vec<&Triple> {
+    pub fn chosen_targets(&self) -> Vec<Target> {
         let mut all = vec![];
         if self.macOS {
             all.extend(self.macOS_targets.iter());
@@ -125,33 +103,6 @@ impl XCFrameworkConfiguration {
         if !self.iOS && !self.macOS {
             bail!("Nothing to build. At least one the fields 'iOS' or 'macOS' must be set to true");
         }
-        use target_lexicon::OperatingSystem::*;
-        validate_triples(&self.macOS_targets, &Darwin, false).context("field 'macOS-targets'")?;
-        validate_triples(&self.iOS_targets, &Ios, false).context("field 'iOS-targets'")?;
-        validate_triples(&self.iOS_simulator_targets, &Ios, true)
-            .context("field 'iOS-simulator-targets'")?;
         Ok(self)
     }
-}
-
-fn validate_triples(
-    targets: &Vec<Triple>,
-    os: &target_lexicon::OperatingSystem,
-    simulator: bool,
-) -> Result<()> {
-    for triple in targets {
-        let triple = target_lexicon::Triple::from_str(triple)
-            .unwrap_or_else(|_| panic!("Triple is invalid: {triple}"));
-        if triple.operating_system != *os {
-            bail!("expected {os} not {} in {triple}", triple.architecture);
-        }
-        use target_lexicon::Vendor::Apple;
-        if triple.vendor != Apple {
-            bail!("expected {Apple} not {} in {triple}", triple.architecture,);
-        }
-        if simulator && !triple.is_apple_simulator() {
-            bail!("expected a simulator architecture not {triple}");
-        }
-    }
-    Ok(())
 }

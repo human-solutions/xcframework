@@ -10,11 +10,11 @@ use std::collections::HashMap;
 use crate::conf::Configuration;
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
-use cmd::{cargo, rustup};
+use cmd::cargo;
+use conf::Target;
 pub use conf::{XCFrameworkConfiguration, XcCli};
 use ext::PathBufExt;
 use fs_err as fs;
-use rustup_configurator::target::Triple;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Produced {
@@ -30,7 +30,6 @@ pub fn build(cli: XcCli) -> Result<Produced> {
         .remove_dir_all_if_exists()
         .context("cleaning build dir")?;
 
-    rustup::check_needed(&conf).context("checking rustup targets")?;
     cargo::build(&conf).context("running cargo build")?;
 
     let libs = {
@@ -143,7 +142,7 @@ fn get_module_paths(include_dir: &Utf8PathBuf) -> Result<Vec<Utf8PathBuf>> {
     Ok(module_paths)
 }
 
-fn lib_paths_for_targets(conf: &Configuration, targets: &[Triple]) -> Result<Vec<Utf8PathBuf>> {
+fn lib_paths_for_targets(conf: &Configuration, targets: &[Target]) -> Result<Vec<Utf8PathBuf>> {
     let mut paths = vec![];
 
     let target_dir = &conf.target_dir;
@@ -153,7 +152,7 @@ fn lib_paths_for_targets(conf: &Configuration, targets: &[Triple]) -> Result<Vec
 
     for target in targets {
         let path = target_dir
-            .join(target)
+            .join(target.as_str())
             .join(profile)
             .join(format!("lib{name}.{ending}"));
         paths.push(path)
