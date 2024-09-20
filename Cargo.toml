@@ -11,19 +11,19 @@ categories = ["development-tools::cargo-plugins", "development-tools::ffi"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-clap = { version = "4.0", features = ["derive"] }
+clap = { version = "4.5", features = ["derive"] }
 anyhow = "1.0"
 cargo_metadata = { version = "0.18", features = ["builder"] }
 camino = "1.1"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-yansi = "0.5"
+yansi = "1.0"
 fs-err = "2.11"
 target-lexicon = "0.12"
 rustup-configurator = "0.1.2"
 lazy_static = "1.4"
 dialoguer = "0.11"
-zip-extensions = "0.6"
+zip-extensions = "0.8"
 fs_extra = "1.2"
 xshell = "0.2.6"
 glob = "0.3.1"

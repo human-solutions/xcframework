@@ -17,7 +17,7 @@ fn run(program: &str, args: &[String], quiet: bool) -> Result<()> {
 
     let mut cmd = Command::new(program).args(args).spawn()?;
     let status = cmd.wait()?;
-    let cmd = Paint::new(format!("{} {}", program, args.join(" "))).dimmed();
+    let cmd = Paint::new(format!("{} {}", program, args.join(" "))).dim();
     if status.success() {
         println!("{} done {}", Paint::green(" XCFramework").bold(), cmd);
         Ok(())
@@ -34,7 +34,7 @@ fn run(program: &str, args: &[String], quiet: bool) -> Result<()> {
 fn run_quiet(program: &str, args: &[String]) -> Result<()> {
     let output = Command::new(program).args(args).output()?;
 
-    let cmd = Paint::new(format!("{} {}", program, args.join(" "))).dimmed();
+    let cmd = Paint::new(format!("{} {}", program, args.join(" "))).dim();
     if output.status.success() {
         Ok(())
     } else {
