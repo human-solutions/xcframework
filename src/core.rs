@@ -50,7 +50,7 @@ pub fn lipo_create_platform_libraries(
     Ok(libs)
 }
 
-/// Reference: https://developer.apple.com/documentation/xcode/creating-a-multi-platform-binary-framework-bundle#Determine-the-architectures-a-binary-supports
+/// Reference: [article](https://developer.apple.com/documentation/xcode/creating-a-multi-platform-binary-framework-bundle#Determine-the-architectures-a-binary-supports)
 ///
 /// Avoid using dynamic library files (.dylib files) for dynamic linking.
 /// An XCFramework can include dynamic library files, but only macOS supports these libraries for dynamic linking.
