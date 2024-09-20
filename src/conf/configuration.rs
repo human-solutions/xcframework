@@ -1,16 +1,16 @@
 use std::cell::RefCell;
 
-use crate::{cmd::modulemap, XcCli};
+use crate::cmd::modulemap;
 use anyhow::{bail, Result};
 use camino::Utf8PathBuf;
 use cargo_metadata::MetadataCommand;
 
-use super::{LibType, XCFrameworkConfiguration};
+use super::{CliArgs, LibType, XCFrameworkConfiguration};
 
 #[derive(Debug)]
 pub struct Configuration {
     pub cargo_section: XCFrameworkConfiguration,
-    pub cli: XcCli,
+    pub cli: CliArgs,
     pub lib_type: LibType,
     // Name of the library (used for the compiled artifacts)
     pub lib_name: String,
@@ -23,7 +23,7 @@ pub struct Configuration {
 }
 
 impl Configuration {
-    pub fn load(mut cli: XcCli) -> Result<Self> {
+    pub fn load(mut cli: CliArgs) -> Result<Self> {
         let manifest_path = cli
             .manifest_path
             .clone()

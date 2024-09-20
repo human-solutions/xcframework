@@ -4,13 +4,25 @@ use super::Target;
 use anyhow::{bail, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use serde::Deserialize;
+use std::str::FromStr;
 
-#[derive(Deserialize, Debug, Clone, clap::ValueEnum, PartialEq, Eq)]
-#[clap(rename_all = "lower")]
+#[derive(Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum LibType {
     StaticLib,
     CDyLib,
+}
+
+impl FromStr for LibType {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "staticlib" => Ok(LibType::StaticLib),
+            "cdylib" => Ok(LibType::CDyLib),
+            _ => Err(format!("Unknown lib type: {}", s)),
+        }
+    }
 }
 
 impl LibType {
