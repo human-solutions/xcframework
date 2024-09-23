@@ -47,8 +47,8 @@ A typical such file looks like this:
 
 ```cpp
  The XCFramework will be named 'MyModuleName.xcframework'
- module MyModuleName {
-     a header file in the same directory as the modulemap
+ framework module MyModuleName {
+     // a header file in the same directory as the modulemap
      header "mylib.h"
      export *
  }
