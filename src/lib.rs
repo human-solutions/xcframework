@@ -2,20 +2,17 @@
 mod cmd;
 mod conf;
 pub mod core;
-pub mod ext;
 
 use core::platform::{ApplePlatform, Environment};
 use std::collections::HashMap;
 
 use crate::conf::Configuration;
 use anyhow::{Context, Result};
-use camino::Utf8PathBuf;
+use camino_fs::*;
 use cmd::cargo;
 pub use conf::CliArgs;
 use conf::Target;
-pub use conf::XCFrameworkConfiguration;
-use ext::PathBufExt;
-use fs_err as fs;
+pub use conf::{LibType, XCFrameworkConfiguration};
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Produced {
@@ -27,16 +24,14 @@ pub struct Produced {
 pub fn build(cli: CliArgs) -> Result<Produced> {
     let conf = Configuration::load(cli).context("loading configuration")?;
 
-    conf.build_dir
-        .remove_dir_all_if_exists()
-        .context("cleaning build dir")?;
+    conf.build_dir.rm().context("cleaning build dir")?;
 
     cargo::build(&conf).context("running cargo build")?;
 
     let libs = {
         let conf = &conf;
         let libs_dir = conf.build_dir.join("libs");
-        fs::create_dir_all(&libs_dir)?;
+        libs_dir.mkdirs()?;
 
         let mut platform_lib_paths = HashMap::new();
         if conf.cargo_section.iOS {
@@ -64,11 +59,13 @@ pub fn build(cli: CliArgs) -> Result<Produced> {
     }
     .context("lipo: assembling libraries")?;
 
-    let bundle_name = conf.module_name()?;
+    let bundle_name = conf.module_name().context("finding module name")?;
+
     let crate_type = match conf.lib_type {
         conf::LibType::StaticLib => &core::CrateType::Staticlib,
         conf::LibType::CDyLib => &core::CrateType::Cdylib,
     };
+
     let framework_paths = libs
         .into_iter()
         .map(|(platform, lib_path)| {
@@ -88,10 +85,13 @@ pub fn build(cli: CliArgs) -> Result<Produced> {
                 &frameworks_dir,
             )
         })
-        .collect::<anyhow::Result<Vec<_>>>()?;
+        .collect::<anyhow::Result<Vec<_>>>()
+        .context("collecting framework paths")?;
 
     let xcframework_path =
-        crate::core::create_xcframework(framework_paths, &conf.module_name()?, &conf.build_dir)?;
+        crate::core::create_xcframework(framework_paths, &conf.module_name()?, &conf.build_dir)
+            .context("creating xcframework")?;
+
     let module_name = conf.module_name()?;
 
     let (path, is_zipped) = if conf.cargo_section.zip {
@@ -101,14 +101,12 @@ pub fn build(cli: CliArgs) -> Result<Produced> {
         )
     } else {
         let to = conf.target_dir.join(format!("{module_name}.xcframework"));
-        if to.exists() {
-            fs::remove_dir_all(&to)?;
-        }
-        fs::rename(xcframework_path, &to)?;
+        to.rm()?;
+        xcframework_path.mv(&to)?;
         (to, false)
     };
 
-    conf.build_dir.remove_dir_all_if_exists()?;
+    conf.build_dir.rm().context("cleaning build dir")?;
 
     Ok(Produced {
         module_name,

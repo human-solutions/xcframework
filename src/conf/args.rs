@@ -1,4 +1,4 @@
-use camino::Utf8PathBuf;
+use camino_fs::Utf8PathBuf;
 
 use super::LibType;
 

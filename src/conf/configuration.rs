@@ -1,8 +1,8 @@
 use std::cell::RefCell;
 
 use crate::cmd::modulemap;
-use anyhow::{bail, Result};
-use camino::Utf8PathBuf;
+use anyhow::{anyhow, bail, Result};
+use camino_fs::Utf8PathBuf;
 use cargo_metadata::MetadataCommand;
 
 use super::{CliArgs, LibType, XCFrameworkConfiguration};
@@ -31,14 +31,27 @@ impl Configuration {
         let mut dir = manifest_path.clone();
         dir.pop();
 
-        let target_dir = cli.target_dir.clone().unwrap_or_else(|| dir.join("target"));
+        let metadata = MetadataCommand::new().manifest_path(manifest_path).exec()?;
+
+        // Use the target directory from the CLI, or the one from the Cargo.toml
+        let target_dir = cli
+            .target_dir
+            .as_ref()
+            .unwrap_or(&metadata.target_directory)
+            .clone();
 
         let build_dir = target_dir.join("xcframework");
 
-        let metadata = MetadataCommand::new().manifest_path(manifest_path).exec()?;
-
-        let Some(package) = metadata.root_package() else {
-            anyhow::bail!("Could not find root package in metadata");
+        let package = if let Some(package) = &cli.package {
+            metadata
+                .workspace_packages()
+                .iter()
+                .find(|p| &p.name == package)
+                .ok_or(anyhow!("Could not find package '{package}'"))?
+        } else {
+            metadata
+                .root_package()
+                .ok_or(anyhow!("Could not find root package in metadata"))?
         };
 
         let staticlib = package.targets.iter().find(|t| {

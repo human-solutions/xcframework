@@ -2,7 +2,7 @@
 
 use super::Target;
 use anyhow::{bail, Context, Result};
-use camino::{Utf8Path, Utf8PathBuf};
+use camino_fs::*;
 use serde::Deserialize;
 use std::str::FromStr;
 

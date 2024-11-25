@@ -12,14 +12,16 @@ categories = ["development-tools::cargo-plugins", "development-tools::ffi"]
 
 [dependencies]
 anyhow = "1.0"
+camino-fs = { git = "https://github.com/human-solutions/camino-fs", tag = "v0.1.2", features = [
+    "serde",
+] }
+# camino-fs = { path = "../camino-fs", features = ["serde"] }
 cargo_metadata = { version = "0.18", features = ["builder"] }
-camino = "1.1"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 yansi = "1.0"
 fs-err = "3.0"
 zip-extensions = { version = "0.8", default-features = false }
-fs_extra = "1.2"
 xshell = "0.2.6"
 glob = "0.3.1"
 xflags = "0.3"
