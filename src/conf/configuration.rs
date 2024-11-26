@@ -1,9 +1,9 @@
 use std::cell::RefCell;
 
 use crate::cmd::modulemap;
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use camino_fs::Utf8PathBuf;
-use cargo_metadata::MetadataCommand;
+use cargo_metadata::{Metadata, MetadataCommand, Package};
 
 use super::{CliArgs, LibType, XCFrameworkConfiguration};
 
@@ -23,16 +23,12 @@ pub struct Configuration {
 }
 
 impl Configuration {
-    pub fn load(mut cli: CliArgs) -> Result<Self> {
-        let manifest_path = cli
-            .manifest_path
-            .clone()
-            .unwrap_or_else(|| Utf8PathBuf::from("Cargo.toml"));
-        let mut dir = manifest_path.clone();
-        dir.pop();
-
-        let metadata = MetadataCommand::new().manifest_path(manifest_path).exec()?;
-
+    pub fn new(
+        metadata: &Metadata,
+        package: &Package,
+        mut cli: CliArgs,
+        xc_conf: XCFrameworkConfiguration,
+    ) -> Result<Self> {
         // Use the target directory from the CLI, or the one from the Cargo.toml
         let target_dir = cli
             .target_dir
@@ -41,47 +37,9 @@ impl Configuration {
             .clone();
 
         let build_dir = target_dir.join("xcframework");
-
-        let package = if let Some(package) = &cli.package {
-            metadata
-                .workspace_packages()
-                .iter()
-                .find(|p| &p.name == package)
-                .ok_or(anyhow!("Could not find package '{package}'"))?
-        } else {
-            metadata
-                .root_package()
-                .ok_or(anyhow!("Could not find root package in metadata"))?
-        };
-
-        let staticlib = package.targets.iter().find(|t| {
-            t.kind.contains(&"staticlib".to_string()) || t.kind.contains(&"staticlib".to_string())
-        });
-        let dylib = package.targets.iter().find(|t| {
-            t.kind.contains(&"cdylib".to_string()) || t.kind.contains(&"cdylib".to_string())
-        });
-
-        let xc_conf = XCFrameworkConfiguration::parse(&package.metadata, &dir)?;
-
         let wanted_lib_type = cli.lib_type.clone().or_else(|| xc_conf.lib_type.clone());
 
-        use LibType::*;
-        let (lib_type, target) = match (staticlib, dylib, wanted_lib_type) {
-            (Some(staticlib), None, None) => (StaticLib, staticlib),
-            (Some(staticlib), _, Some(StaticLib)) => (StaticLib, staticlib),
-            (Some(_staticlib), None, Some(CDyLib)) => {
-                bail!("Please add 'cdylib' to '[lib] crate-type' in Cargo.toml")
-            }
-            (None, Some(dylib), None) => (CDyLib, dylib),
-            (_, Some(dylib), Some(CDyLib)) => (CDyLib, dylib),
-            (_, Some(_dylib), Some(StaticLib)) => {
-                bail!("Please add 'staticlib' to '[lib] crate-type' in Cargo.toml")
-            }
-            (Some(_), Some(_), None) => {
-                bail!("Please set '[package.metadata.xcframework] lib-type' in Cargo.toml")
-            }
-            (None, None, _) => bail!("Missing '[lib] crate-type' in Cargo.toml"),
-        };
+        let (lib_type, target) = get_libtype(package, wanted_lib_type)?;
 
         if xc_conf.build_std && lib_type == LibType::StaticLib {
             let already_set = cli
@@ -97,7 +55,6 @@ impl Configuration {
                 }
             }
         }
-
         Ok(Self {
             cargo_section: xc_conf,
             cli,
@@ -107,6 +64,38 @@ impl Configuration {
             target_dir,
             build_dir,
         })
+    }
+
+    pub fn load(cli: CliArgs) -> Result<Self> {
+        let manifest_path = cli
+            .manifest_path
+            .clone()
+            .unwrap_or_else(|| Utf8PathBuf::from("Cargo.toml"));
+        let mut dir = manifest_path.clone();
+        dir.pop();
+
+        let metadata = MetadataCommand::new().manifest_path(manifest_path).exec()?;
+
+        let package = if let Some(package) = &cli.package {
+            metadata
+                .workspace_packages()
+                .iter()
+                .find(|p| &p.name == package)
+                .ok_or(anyhow!("Could not find package '{package}'"))?
+        } else {
+            metadata
+                .root_package()
+                .ok_or(anyhow!("Could not find root package in metadata"))?
+        };
+
+        let Some(section) = package.metadata.get("xcframework") else {
+            bail!("Missing [package.metadata.xcframework] section in Cargo.toml");
+        };
+
+        let xc_conf = XCFrameworkConfiguration::parse(section, &dir, true)
+            .context("Error in Cargo.toml section [package.metadata.xcframework]")?;
+
+        Self::new(&metadata, package, cli, xc_conf)
     }
 
     pub fn module_name(&self) -> Result<String> {
@@ -127,4 +116,34 @@ impl Configuration {
             self.cli.profile.as_deref().unwrap_or("debug")
         }
     }
+}
+
+fn get_libtype(
+    package: &Package,
+    libtype: Option<LibType>,
+) -> Result<(LibType, &cargo_metadata::Target)> {
+    let staticlib = package.targets.iter().find(|t| {
+        t.kind.contains(&"staticlib".to_string()) || t.kind.contains(&"staticlib".to_string())
+    });
+    let dylib = package
+        .targets
+        .iter()
+        .find(|t| t.kind.contains(&"cdylib".to_string()) || t.kind.contains(&"cdylib".to_string()));
+    use LibType::*;
+    Ok(match (staticlib, dylib, libtype) {
+        (Some(staticlib), None, None) => (StaticLib, staticlib),
+        (Some(staticlib), _, Some(StaticLib)) => (StaticLib, staticlib),
+        (Some(_staticlib), None, Some(CDyLib)) => {
+            bail!("Please add 'cdylib' to '[lib] crate-type' in Cargo.toml")
+        }
+        (None, Some(dylib), None) => (CDyLib, dylib),
+        (_, Some(dylib), Some(CDyLib)) => (CDyLib, dylib),
+        (_, Some(_dylib), Some(StaticLib)) => {
+            bail!("Please add 'staticlib' to '[lib] crate-type' in Cargo.toml")
+        }
+        (Some(_), Some(_), None) => {
+            bail!("Please set '[package.metadata.xcframework] lib-type' in Cargo.toml")
+        }
+        (None, None, _) => bail!("Missing '[lib] crate-type' in Cargo.toml"),
+    })
 }

@@ -6,7 +6,7 @@ pub mod core;
 use core::platform::{ApplePlatform, Environment};
 use std::collections::HashMap;
 
-use crate::conf::Configuration;
+pub use crate::conf::Configuration;
 use anyhow::{Context, Result};
 use camino_fs::*;
 use cmd::cargo;
@@ -21,9 +21,13 @@ pub struct Produced {
     pub is_zipped: bool,
 }
 
-pub fn build(cli: CliArgs) -> Result<Produced> {
-    let conf = Configuration::load(cli).context("loading configuration")?;
+pub fn build_from_cli(cli: CliArgs) -> Result<Produced> {
+    let config = Configuration::load(cli).context("loading configuration")?;
 
+    crate::build(&config)
+}
+
+pub fn build(conf: &Configuration) -> Result<Produced> {
     conf.build_dir.rm().context("cleaning build dir")?;
 
     cargo::build(&conf).context("running cargo build")?;

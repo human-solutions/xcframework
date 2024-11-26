@@ -8,7 +8,7 @@ name = "mymath"
 crate-type = ["staticlib", "cdylib"]
 
 [package.metadata.xcframework]
-lib-type = "staticlib"
+lib-type = "cdylib"
 include-dir = "include"
 iOS = true
 macOS = true

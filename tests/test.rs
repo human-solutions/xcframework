@@ -13,7 +13,7 @@ fn test_hello() {
 
     let cli = args(&["--quiet", "--manifest-path", "tests/project/Cargo.toml"]);
 
-    let produced = xcframework::build(cli).unwrap();
+    let produced = xcframework::build_from_cli(cli).unwrap();
     assert!(produced.is_zipped);
     assert_eq!(produced.module_name, "HelloTest");
 }
@@ -42,7 +42,7 @@ fn end_to_end_static() {
         target_dir.as_str(),
     ]);
 
-    let produced = xcframework::build(cli).unwrap();
+    let produced = xcframework::build_from_cli(cli).unwrap();
     assert!(produced.is_zipped);
     assert_eq!(produced.module_name, "MyMath");
 
@@ -78,7 +78,7 @@ fn end_to_end_dynamic() {
         target_dir.as_str(),
     ]);
 
-    let produced = xcframework::build(cli).unwrap();
+    let produced = xcframework::build_from_cli(cli).unwrap();
     assert!(produced.is_zipped);
     assert_eq!(produced.module_name, "MyMath");
 
@@ -109,7 +109,7 @@ fn multi_platform_static() {
         "--target-dir",
         target_dir.as_str(),
     ]);
-    let produced = xcframework::build(cli).unwrap();
+    let produced = xcframework::build_from_cli(cli).unwrap();
     assert_eq!(produced.module_name, "MyMath");
     let tuist_workspace_dir = cp_tuist_workspace(out_dir.as_path()).unwrap();
     let cmd = Command::new("tuist")
@@ -139,7 +139,7 @@ fn multi_platform_dynamic() {
         "--target-dir",
         target_dir.as_str(),
     ]);
-    let produced = xcframework::build(cli).unwrap();
+    let produced = xcframework::build_from_cli(cli).unwrap();
     assert_eq!(produced.module_name, "MyMath");
     let tuist_workspace_dir = cp_tuist_workspace(out_dir.as_path()).unwrap();
     let cmd = Command::new("tuist")
