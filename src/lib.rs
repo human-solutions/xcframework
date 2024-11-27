@@ -30,7 +30,7 @@ pub fn build_from_cli(cli: CliArgs) -> Result<Produced> {
 pub fn build(conf: &Configuration) -> Result<Produced> {
     conf.build_dir.rm().context("cleaning build dir")?;
 
-    cargo::build(&conf).context("running cargo build")?;
+    cargo::build(conf).context("running cargo build")?;
 
     let libs = {
         let conf = &conf;
