@@ -1,6 +1,6 @@
 > <span style="color:darkorange">**⚠️ WARNING**</span>
 >
-> This is work in progress and is not ready for use
+> This has not yet been thoroughly tested. Use at your own risk.
 
 A Cargo plugin and library for building Apple XCFrameworks from Rust libraries
 
@@ -46,7 +46,7 @@ The built XCFramework is named after the top-level module name declared in the `
 A typical such file looks like this:
 
 ```cpp
- The XCFramework will be named 'MyModuleName.xcframework'
+ // The XCFramework will be named 'MyModuleName.xcframework'
  framework module MyModuleName {
      // a header file in the same directory as the modulemap
      header "mylib.h"
@@ -62,45 +62,55 @@ Cargo.toml parameters in section `[package.metadata.xcframework]`.
 # Note that the modulemap needs to be present in the directory because the
 # module name declared in it is used for the framework name.
 include-dir = "my-bin-name"
+
 # The library type. Can be staticlib or cdylib
 #
 # Optional. This is only necessary if both library types are configured in the
 # [lib] sections `crate-type` parameter. Overridden by the command line parameter `--lib-type`.
 lib-type = "staticlib"
+
 # Whether to zip the resulting XCFramework
 #
 # Optional. Defaults to true.
-zip = true
+zip = false
+
 # Enable Cargo to compile the standard library itself as part of a crate graph compilation.
 # If enabled either run with `cargo +nightly xcframework`, set the default toolchain to nightly
 # or set run `rustup override set nightly` in the project directory.
 #
 # Optional. Defaults to false. Requires nightly. Only useful for staticlib's, ignored for cdylibs.
 build-std = false
+
 # Whether to build for macOS
 #
 # Optional. Defaults to false.
 macOS = false
+
 # The macOS target triples
 #
 # Optional. Defaults to ["x86_64-apple-darwin", "aarch64-apple-darwin"].
 macOS-targets = ["x86_64-apple-darwin", "aarch64-apple-darwin"]
+
 # Whether to build the simulator targets. Not used when building for macOS.
 #
 # Optional. Defaults to false
 simulators = false
+
 # Whether to build for iOS
 #
 # Optional. Defaults to false.
 iOS = false
+
 # The iOS target triples
 #
 # Optional. Defaults to ["aarch64-apple-ios"].
 iOS-targets = ["aarch64-apple-ios"]
+
 # The iOS simulator target triples. Only used if `simulators` and `iOS` are true.
 #
 # Optional. Defaults to ["aarch64-apple-ios-sim", "x86_64-apple-ios"]
 iOS-simulator-targets = ["aarch64-apple-ios-sim", "x86_64-apple-ios"]
+
 # If there is interest, watchOS and tvOS can be added as well.
 ```
 
