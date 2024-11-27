@@ -3,7 +3,7 @@ use std::cell::RefCell;
 use crate::cmd::modulemap;
 use anyhow::{anyhow, bail, Context, Result};
 use camino_fs::Utf8PathBuf;
-use cargo_metadata::{Metadata, MetadataCommand, Package};
+use cargo_metadata::{Metadata, MetadataCommand, Package, TargetKind};
 
 use super::{CliArgs, LibType, XCFrameworkConfiguration};
 
@@ -123,12 +123,12 @@ fn get_libtype(
     libtype: Option<LibType>,
 ) -> Result<(LibType, &cargo_metadata::Target)> {
     let staticlib = package.targets.iter().find(|t| {
-        t.kind.contains(&"staticlib".to_string()) || t.kind.contains(&"staticlib".to_string())
+        t.kind.contains(&TargetKind::StaticLib) || t.kind.contains(&TargetKind::StaticLib)
     });
     let dylib = package
         .targets
         .iter()
-        .find(|t| t.kind.contains(&"cdylib".to_string()) || t.kind.contains(&"cdylib".to_string()));
+        .find(|t| t.kind.contains(&TargetKind::CDyLib) || t.kind.contains(&TargetKind::CDyLib));
     use LibType::*;
     Ok(match (staticlib, dylib, libtype) {
         (Some(staticlib), None, None) => (StaticLib, staticlib),
