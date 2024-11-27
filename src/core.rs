@@ -43,7 +43,7 @@ pub fn lipo_create_platform_libraries(
         cmd = cmd.arg("-output").arg(&output_path);
         println!("🍭 Running lipo create for platform: {platform:?} ...");
         cmd.run()?;
-        println!("✅ Run lipo create success, platform: {platform:?}, output:\n{output_path:?}");
+        println!("✅ Run lipo create success, platform: {platform:?}, output:\n{output_path}");
         libs.insert(platform.clone(), output_path);
     }
     Ok(libs)
@@ -59,7 +59,7 @@ pub fn wrap_as_framework(
     crate_type: &CrateType,
     lib_path: &Utf8PathBuf,
     header_paths: Vec<Utf8PathBuf>,
-    module_paths: Vec<Utf8PathBuf>,
+    module_path: Utf8PathBuf,
     bundle_name: &str,
     output_dir: &Utf8PathBuf,
 ) -> anyhow::Result<Utf8PathBuf> {
@@ -109,10 +109,8 @@ pub fn wrap_as_framework(
         header_path.cp(output_path.join("Headers").join(header_name))?;
     }
 
-    for module_path in module_paths.iter() {
-        let module_name = module_path.file_name().context("module path error")?;
-        module_path.cp(output_path.join("Modules").join(module_name))?;
-    }
+    let module_dest = output_path.join("Modules").join("module.modulemap");
+    module_path.cp(module_dest)?;
 
     println!(
         "✅ Wrapped artifacts as framework success, output:\n{}",
