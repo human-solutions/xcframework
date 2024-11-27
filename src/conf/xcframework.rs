@@ -1,8 +1,8 @@
 #![allow(non_snake_case)]
 
 use super::Target;
-use anyhow::{bail, Context, Result};
-use camino::{Utf8Path, Utf8PathBuf};
+use anyhow::{bail, Result};
+use camino_fs::*;
 use serde::Deserialize;
 use std::str::FromStr;
 
@@ -38,6 +38,9 @@ impl LibType {
 #[serde(rename_all = "kebab-case")]
 pub struct XCFrameworkConfiguration {
     /// The include directory containing the headers and the module.modulemap file
+    /// This is set to default because sometimes it needs to be set manually after
+    /// parsing the config.
+    #[serde(default)]
     pub include_dir: Utf8PathBuf,
 
     /// The library type (staticlib or cdylib)
@@ -72,7 +75,7 @@ pub struct XCFrameworkConfiguration {
 }
 
 pub fn zip_default() -> bool {
-    true
+    false
 }
 
 impl XCFrameworkConfiguration {
@@ -92,22 +95,25 @@ impl XCFrameworkConfiguration {
 
     /// Parses the [package.metadata.xcframework] section of the Cargo.toml
     /// and updates the headers_directory to be relative to current working directory
-    pub fn parse(metadata: &serde_json::Value, dir: &Utf8Path) -> Result<Self> {
-        if let Some(xcfr) = metadata.get("xcframework") {
-            Self::parse_xcframework(xcfr, dir)
-                .context("Error in Cargo.toml section [package.metadata.xcframework]")
+    pub fn parse(
+        section: &serde_json::Value,
+        package_dir: &Utf8Path,
+        validate: bool,
+    ) -> Result<Self> {
+        let mut me = serde_json::from_value::<Self>(section.clone())?;
+        me.include_dir = package_dir.join(me.include_dir);
+        if validate {
+            me.validated()
         } else {
-            bail!("Missing [package.metadata.xcframework] section in Cargo.toml");
+            Ok(me)
         }
     }
 
-    fn parse_xcframework(xcfr: &serde_json::Value, dir: &Utf8Path) -> Result<Self> {
-        let mut me = serde_json::from_value::<Self>(xcfr.clone())?;
-        me.include_dir = dir.join(me.include_dir);
-        me.validated()
-    }
-
     fn validated(self) -> Result<Self> {
+        if self.include_dir.as_str().is_empty() {
+            bail!("The include-dir field is required");
+        }
+
         if !self.include_dir.exists() {
             bail!("The include-dir '{}' does not exist", self.include_dir);
         }

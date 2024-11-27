@@ -6,6 +6,7 @@ pub fn build(conf: &Configuration) -> Result<()> {
     let mut args: Vec<String> = vec![];
 
     args.push("build".into());
+    args.push("--color=always".into());
 
     if conf.target_dir != "target" {
         args.push(format!("--target-dir={}", conf.target_dir));

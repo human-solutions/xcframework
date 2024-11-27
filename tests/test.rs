@@ -1,9 +1,6 @@
 use anyhow::Result;
-use camino::Utf8PathBuf;
-use fs_err as fs;
-use std::path::{Path, PathBuf};
+use camino_fs::*;
 use std::process::Command;
-use xcframework::ext::PathBufExt;
 use xcframework::CliArgs;
 
 fn args(vec: &[&str]) -> CliArgs {
@@ -16,17 +13,15 @@ fn test_hello() {
 
     let cli = args(&["--quiet", "--manifest-path", "tests/project/Cargo.toml"]);
 
-    let produced = xcframework::build(cli).unwrap();
-    assert!(produced.is_zipped);
+    let produced = xcframework::build_from_cli(cli).unwrap();
+    assert!(!produced.is_zipped);
     assert_eq!(produced.module_name, "HelloTest");
 }
 
-fn create_output_dir(subfolder: &str) -> PathBuf {
-    let tmp_dir = PathBuf::from("tests").join("temp").join(subfolder);
-    if tmp_dir.exists() {
-        fs::remove_dir_all(&tmp_dir).unwrap();
-    }
-    fs::create_dir_all(&tmp_dir).unwrap();
+fn create_output_dir(subfolder: &str) -> Utf8PathBuf {
+    let tmp_dir = Utf8PathBuf::from("tests").join("temp").join(subfolder);
+    tmp_dir.rm().unwrap();
+    tmp_dir.mkdirs().unwrap();
     tmp_dir
 }
 
@@ -35,7 +30,7 @@ fn end_to_end_static() {
     let out_dir = create_output_dir("static");
 
     let target_dir = out_dir.join("mymath-lib/target");
-    fs::create_dir_all(&target_dir).unwrap();
+    target_dir.mkdirs().unwrap();
 
     let cli = args(&[
         "--quiet",
@@ -44,11 +39,11 @@ fn end_to_end_static() {
         "--lib-type",
         "staticlib",
         "--target-dir",
-        target_dir.to_str().unwrap(),
+        target_dir.as_str(),
     ]);
 
-    let produced = xcframework::build(cli).unwrap();
-    assert!(produced.is_zipped);
+    let produced = xcframework::build_from_cli(cli).unwrap();
+    assert!(!produced.is_zipped);
     assert_eq!(produced.module_name, "MyMath");
 
     let swift_dir = cp_swift_exe(&out_dir).unwrap();
@@ -62,7 +57,7 @@ fn end_to_end_static() {
     let stdout = String::from_utf8_lossy(&cmd.stdout);
     let stderr = String::from_utf8_lossy(&cmd.stderr);
     eprintln!("{stderr}");
-    assert!(stderr.contains("Build complete!"));
+    assert!(cmd.status.success());
     assert_eq!("MyMath.rust_add(4 + 2) = 6\n", stdout);
 }
 
@@ -71,7 +66,7 @@ fn end_to_end_dynamic() {
     let out_dir = create_output_dir("dynamic");
 
     let target_dir = out_dir.join("mymath-lib/target");
-    fs::create_dir_all(&target_dir).unwrap();
+    target_dir.mkdirs().unwrap();
 
     let cli = args(&[
         "--quiet",
@@ -80,11 +75,11 @@ fn end_to_end_dynamic() {
         "--lib-type",
         "cdylib",
         "--target-dir",
-        target_dir.to_str().unwrap(),
+        target_dir.as_str(),
     ]);
 
-    let produced = xcframework::build(cli).unwrap();
-    assert!(produced.is_zipped);
+    let produced = xcframework::build_from_cli(cli).unwrap();
+    assert!(!produced.is_zipped);
     assert_eq!(produced.module_name, "MyMath");
 
     let swift_dir = cp_swift_exe(out_dir.as_path()).unwrap();
@@ -105,16 +100,16 @@ fn end_to_end_dynamic() {
 fn multi_platform_static() {
     let out_dir = create_output_dir("multi-platform-static");
     let target_dir = out_dir.join("mymath-lib/target");
-    fs::create_dir_all(&target_dir).unwrap();
+    target_dir.mkdirs().unwrap();
     let cli = args(&[
         "--manifest-path",
         "examples/multi-platform/mymath-lib/Cargo.toml",
         "--lib-type",
         "staticlib",
         "--target-dir",
-        target_dir.to_str().unwrap(),
+        target_dir.as_str(),
     ]);
-    let produced = xcframework::build(cli).unwrap();
+    let produced = xcframework::build_from_cli(cli).unwrap();
     assert_eq!(produced.module_name, "MyMath");
     let tuist_workspace_dir = cp_tuist_workspace(out_dir.as_path()).unwrap();
     let cmd = Command::new("tuist")
@@ -134,16 +129,17 @@ fn multi_platform_static() {
 fn multi_platform_dynamic() {
     let out_dir = create_output_dir("multi-platform-dynamic");
     let target_dir = out_dir.join("mymath-lib/target");
-    fs::create_dir_all(&target_dir).unwrap();
+    target_dir.mkdirs().unwrap();
+
     let cli = args(&[
         "--manifest-path",
         "examples/multi-platform/mymath-lib/Cargo.toml",
         "--lib-type",
         "cdylib",
         "--target-dir",
-        target_dir.to_str().unwrap(),
+        target_dir.as_str(),
     ]);
-    let produced = xcframework::build(cli).unwrap();
+    let produced = xcframework::build_from_cli(cli).unwrap();
     assert_eq!(produced.module_name, "MyMath");
     let tuist_workspace_dir = cp_tuist_workspace(out_dir.as_path()).unwrap();
     let cmd = Command::new("tuist")
@@ -158,25 +154,22 @@ fn multi_platform_dynamic() {
     }
 }
 
-fn cp_swift_exe(dest: &Path) -> Result<Utf8PathBuf> {
+fn cp_swift_exe(dest: &Utf8Path) -> Result<Utf8PathBuf> {
+    println!("dest: {:?}", dest);
     let from = Utf8PathBuf::from("examples/end-to-end/swift-exe");
 
-    let dest = Utf8PathBuf::from_path_buf(dest.to_path_buf()).unwrap();
+    let dest = dest.join("swift-exe");
+    dest.mkdirs()?;
 
-    dest.create_dir_all_if_needed()?;
-
-    fs_extra::dir::copy(from, &dest, &fs_extra::dir::CopyOptions::new())?;
-    let build_tmp = dest.join("swift-exe/.build");
-    if build_tmp.exists() {
-        fs::remove_dir_all(build_tmp)?;
-    }
-    Ok(dest.join("swift-exe"))
+    from.cp(&dest)?;
+    let build_tmp = dest.join(".build");
+    build_tmp.rm()?;
+    Ok(dest)
 }
 
-fn cp_tuist_workspace(dest: &Path) -> Result<Utf8PathBuf> {
+fn cp_tuist_workspace(dest: &Utf8Path) -> Result<Utf8PathBuf> {
     let from = Utf8PathBuf::from("examples/multi-platform/tuist-workspace");
-    let dest = Utf8PathBuf::from_path_buf(dest.to_path_buf()).unwrap();
-    dest.create_dir_all_if_needed()?;
-    fs_extra::dir::copy(from, &dest, &fs_extra::dir::CopyOptions::new())?;
+    dest.mkdirs()?;
+    from.cp(dest)?;
     Ok(dest.join("tuist-workspace"))
 }

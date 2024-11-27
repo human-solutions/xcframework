@@ -2,11 +2,20 @@ use std::io;
 
 use crate::conf::Configuration;
 use anyhow::{bail, Context, Result};
-use fs_err::File;
+use camino_fs::*;
+use std::fs::File;
 
 pub fn get_module_name(conf: &Configuration) -> Result<String> {
-    let mm = conf.cargo_section.include_dir.join("module.modulemap");
-    let file = File::open(&mm)?;
+    let mm_files = ls_modulemap_files(&conf.cargo_section.include_dir)?;
+    if mm_files.len() != 1 {
+        bail!(
+            "Expected one modulemap file in include directory, found {count}: {mm_files:?} in {dir}",
+            count = mm_files.len(),
+            dir = conf.cargo_section.include_dir
+        );
+    }
+    let mm = &mm_files[0];
+    let file = File::open(mm)?;
     let content = io::read_to_string(&file)?;
 
     parse_module_name(&content).context(format!(
@@ -31,4 +40,12 @@ fn parse_module_name(content: &str) -> Result<String> {
         bail!("Expected `module <name> {{` not `{module}`");
     }
     Ok(module.to_string())
+}
+
+fn ls_modulemap_files(dir: &Utf8Path) -> Result<Vec<Utf8PathBuf>> {
+    Ok(dir
+        .ls()
+        .files()
+        .filter(|path| path.extension().map_or(false, |ext| ext == "modulemap"))
+        .collect())
 }

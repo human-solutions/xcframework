@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 
 use anyhow::{Context, Ok};
-use camino::Utf8PathBuf;
-use fs_err as fs;
+use camino_fs::*;
 use platform::ApplePlatform;
 use xshell::{cmd, Shell};
 
@@ -24,7 +23,7 @@ pub fn lipo_create_platform_libraries(
     output_dir: &Utf8PathBuf,
 ) -> anyhow::Result<HashMap<ApplePlatform, Utf8PathBuf>> {
     let sh = Shell::new()?;
-    fs::create_dir_all(output_dir)?;
+    output_dir.mkdirs()?;
 
     let mut libs = HashMap::new();
     for (platform, paths) in platform_lib_paths.iter() {
@@ -34,7 +33,7 @@ pub fn lipo_create_platform_libraries(
             continue;
         }
         let platform_dir = output_dir.join(format!("{:?}", platform));
-        fs::create_dir_all(&platform_dir)?;
+        platform_dir.mkdirs()?;
         let output_path = platform_dir.join(output_lib_name);
 
         let mut cmd = cmd!(sh, "lipo -create");
@@ -44,7 +43,7 @@ pub fn lipo_create_platform_libraries(
         cmd = cmd.arg("-output").arg(&output_path);
         println!("🍭 Running lipo create for platform: {platform:?} ...");
         cmd.run()?;
-        println!("✅ Run lipo create success, platform: {platform:?}, output:\n{output_path:?}");
+        println!("✅ Run lipo create success, platform: {platform:?}, output:\n{output_path}");
         libs.insert(platform.clone(), output_path);
     }
     Ok(libs)
@@ -60,7 +59,7 @@ pub fn wrap_as_framework(
     crate_type: &CrateType,
     lib_path: &Utf8PathBuf,
     header_paths: Vec<Utf8PathBuf>,
-    module_paths: Vec<Utf8PathBuf>,
+    module_path: Utf8PathBuf,
     bundle_name: &str,
     output_dir: &Utf8PathBuf,
 ) -> anyhow::Result<Utf8PathBuf> {
@@ -73,7 +72,7 @@ pub fn wrap_as_framework(
     let output_path = output_dir
         .join(format!("{:?}", platform))
         .join(format!("{}{}", bundle_name, SUFFIX));
-    fs::create_dir_all(&output_path)?;
+    output_path.mkdirs()?;
 
     let plist = plist::InfoPlistBuilder::new(bundle_name, platform);
     let plist_path = output_path.join("Info.plist");
@@ -90,7 +89,7 @@ pub fn wrap_as_framework(
         .run()?;
 
     let to_binary = format!("{}/{}", &output_path, bundle_name);
-    fs::copy(lib_path.as_path(), to_binary)?;
+    lib_path.cp(to_binary)?;
 
     if let CrateType::Cdylib = crate_type {
         sh.cmd("install_name_tool")
@@ -102,24 +101,16 @@ pub fn wrap_as_framework(
             .output()?;
     }
 
-    fs::create_dir_all(format!("{}/Headers", &output_path))?;
-    fs::create_dir_all(format!("{}/Modules", &output_path))?;
+    output_path.join("Headers").mkdirs()?;
+    output_path.join("Modules").mkdirs()?;
 
     for header_path in header_paths.iter() {
         let header_name = header_path.file_name().context("header path error")?;
-        fs::copy(
-            header_path,
-            format!("{}/Headers/{}", output_path, header_name),
-        )?;
+        header_path.cp(output_path.join("Headers").join(header_name))?;
     }
 
-    for module_path in module_paths.iter() {
-        let module_name = module_path.file_name().context("module path error")?;
-        fs::copy(
-            module_path,
-            format!("{}/Modules/{}", output_path, module_name),
-        )?;
-    }
+    let module_dest = output_path.join("Modules").join("module.modulemap");
+    module_path.cp(module_dest)?;
 
     println!(
         "✅ Wrapped artifacts as framework success, output:\n{}",
@@ -143,7 +134,7 @@ pub fn create_xcframework(
     let xcframework_path = output_dir.join(format!("{}{}", bundle_name, SUFFIX));
 
     if xcframework_path.exists() {
-        fs::remove_dir_all(&xcframework_path)?;
+        xcframework_path.rm()?;
     }
 
     let mut cmd = sh.cmd("xcrun").args(["xcodebuild", "-create-xcframework"]);

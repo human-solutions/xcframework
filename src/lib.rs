@@ -2,20 +2,17 @@
 mod cmd;
 mod conf;
 pub mod core;
-pub mod ext;
 
 use core::platform::{ApplePlatform, Environment};
 use std::collections::HashMap;
 
-use crate::conf::Configuration;
+pub use crate::conf::Configuration;
 use anyhow::{Context, Result};
-use camino::Utf8PathBuf;
+use camino_fs::*;
 use cmd::cargo;
 pub use conf::CliArgs;
 use conf::Target;
-pub use conf::XCFrameworkConfiguration;
-use ext::PathBufExt;
-use fs_err as fs;
+pub use conf::{LibType, XCFrameworkConfiguration};
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Produced {
@@ -24,19 +21,21 @@ pub struct Produced {
     pub is_zipped: bool,
 }
 
-pub fn build(cli: CliArgs) -> Result<Produced> {
-    let conf = Configuration::load(cli).context("loading configuration")?;
+pub fn build_from_cli(cli: CliArgs) -> Result<Produced> {
+    let config = Configuration::load(cli).context("loading configuration")?;
 
-    conf.build_dir
-        .remove_dir_all_if_exists()
-        .context("cleaning build dir")?;
+    crate::build(&config)
+}
 
-    cargo::build(&conf).context("running cargo build")?;
+pub fn build(conf: &Configuration) -> Result<Produced> {
+    conf.build_dir.rm().context("cleaning build dir")?;
+
+    cargo::build(conf).context("running cargo build")?;
 
     let libs = {
         let conf = &conf;
         let libs_dir = conf.build_dir.join("libs");
-        fs::create_dir_all(&libs_dir)?;
+        libs_dir.mkdirs()?;
 
         let mut platform_lib_paths = HashMap::new();
         if conf.cargo_section.iOS {
@@ -64,56 +63,56 @@ pub fn build(cli: CliArgs) -> Result<Produced> {
     }
     .context("lipo: assembling libraries")?;
 
-    let bundle_name = conf.module_name()?;
+    let bundle_name = conf.module_name().context("finding module name")?;
+
     let crate_type = match conf.lib_type {
         conf::LibType::StaticLib => &core::CrateType::Staticlib,
         conf::LibType::CDyLib => &core::CrateType::Cdylib,
     };
+
     let framework_paths = libs
         .into_iter()
         .map(|(platform, lib_path)| {
             let include_dir = &conf.cargo_section.include_dir;
             let header_paths = get_header_paths(include_dir)?;
-            let module_paths = get_module_paths(include_dir)?;
+            let module_path = get_module_path(include_dir)?;
             let frameworks_dir = conf.target_dir.join("frameworks");
-            std::fs::create_dir_all(&frameworks_dir)?;
+            frameworks_dir.mkdirs()?;
 
             core::wrap_as_framework(
                 platform,
                 crate_type,
                 &lib_path,
                 header_paths,
-                module_paths,
+                module_path,
                 &bundle_name,
                 &frameworks_dir,
             )
         })
-        .collect::<anyhow::Result<Vec<_>>>()?;
+        .collect::<anyhow::Result<Vec<_>>>()
+        .context("collecting framework paths")?;
 
     let xcframework_path =
-        crate::core::create_xcframework(framework_paths, &conf.module_name()?, &conf.build_dir)?;
+        crate::core::create_xcframework(framework_paths, &conf.module_name()?, &conf.build_dir)
+            .context("creating xcframework")?;
+
     let module_name = conf.module_name()?;
 
-    let (path, is_zipped) = if conf.cargo_section.zip {
-        (
-            core::compress_xcframework(None, &xcframework_path, None, &conf.target_dir)?,
-            true,
-        )
+    let path = if conf.cargo_section.zip {
+        core::compress_xcframework(None, &xcframework_path, None, &conf.target_dir)?
     } else {
         let to = conf.target_dir.join(format!("{module_name}.xcframework"));
-        if to.exists() {
-            fs::remove_dir_all(&to)?;
-        }
-        fs::rename(xcframework_path, &to)?;
-        (to, false)
+        to.rm()?;
+        xcframework_path.mv(&to)?;
+        to
     };
 
-    conf.build_dir.remove_dir_all_if_exists()?;
+    conf.build_dir.rm().context("cleaning build dir")?;
 
     Ok(Produced {
         module_name,
         path,
-        is_zipped,
+        is_zipped: conf.cargo_section.zip,
     })
 }
 
@@ -131,16 +130,15 @@ fn get_header_paths(include_dir: &Utf8PathBuf) -> Result<Vec<Utf8PathBuf>> {
     Ok(header_paths)
 }
 
-fn get_module_paths(include_dir: &Utf8PathBuf) -> Result<Vec<Utf8PathBuf>> {
-    let mut module_paths = Vec::new();
-    let pattern = format!("{}/**/*.modulemap", include_dir);
-    for entry in glob::glob(&pattern)? {
-        match entry {
-            Ok(path) => module_paths.push(Utf8PathBuf::from_path_buf(path).unwrap()),
-            Err(e) => println!("{:?}", e),
-        }
+fn get_module_path(include_dir: &Utf8PathBuf) -> Result<Utf8PathBuf> {
+    let pattern = format!("{include_dir}/**/*.modulemap");
+    let mut glob = glob::glob(&pattern)?;
+    let module_path = glob.next().context("modulemap not found")??;
+    if glob.next().is_some() {
+        anyhow::bail!("multiple modulemaps found");
     }
-    Ok(module_paths)
+
+    Ok(Utf8PathBuf::from_path_buf(module_path).unwrap())
 }
 
 fn lib_paths_for_targets(conf: &Configuration, targets: &[Target]) -> Result<Vec<Utf8PathBuf>> {
