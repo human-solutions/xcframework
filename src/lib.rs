@@ -98,16 +98,13 @@ pub fn build(conf: &Configuration) -> Result<Produced> {
 
     let module_name = conf.module_name()?;
 
-    let (path, is_zipped) = if conf.cargo_section.zip {
-        (
-            core::compress_xcframework(None, &xcframework_path, None, &conf.target_dir)?,
-            true,
-        )
+    let path = if conf.cargo_section.zip {
+        core::compress_xcframework(None, &xcframework_path, None, &conf.target_dir)?
     } else {
         let to = conf.target_dir.join(format!("{module_name}.xcframework"));
         to.rm()?;
         xcframework_path.mv(&to)?;
-        (to, false)
+        to
     };
 
     conf.build_dir.rm().context("cleaning build dir")?;
@@ -115,7 +112,7 @@ pub fn build(conf: &Configuration) -> Result<Produced> {
     Ok(Produced {
         module_name,
         path,
-        is_zipped,
+        is_zipped: conf.cargo_section.zip,
     })
 }
 

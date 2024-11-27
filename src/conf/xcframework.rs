@@ -75,7 +75,7 @@ pub struct XCFrameworkConfiguration {
 }
 
 pub fn zip_default() -> bool {
-    true
+    false
 }
 
 impl XCFrameworkConfiguration {

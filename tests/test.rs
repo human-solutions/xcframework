@@ -14,7 +14,7 @@ fn test_hello() {
     let cli = args(&["--quiet", "--manifest-path", "tests/project/Cargo.toml"]);
 
     let produced = xcframework::build_from_cli(cli).unwrap();
-    assert!(produced.is_zipped);
+    assert!(!produced.is_zipped);
     assert_eq!(produced.module_name, "HelloTest");
 }
 
@@ -43,7 +43,7 @@ fn end_to_end_static() {
     ]);
 
     let produced = xcframework::build_from_cli(cli).unwrap();
-    assert!(produced.is_zipped);
+    assert!(!produced.is_zipped);
     assert_eq!(produced.module_name, "MyMath");
 
     let swift_dir = cp_swift_exe(&out_dir).unwrap();
@@ -79,7 +79,7 @@ fn end_to_end_dynamic() {
     ]);
 
     let produced = xcframework::build_from_cli(cli).unwrap();
-    assert!(produced.is_zipped);
+    assert!(!produced.is_zipped);
     assert_eq!(produced.module_name, "MyMath");
 
     let swift_dir = cp_swift_exe(out_dir.as_path()).unwrap();
