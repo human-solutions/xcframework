@@ -1,5 +1,3 @@
-use std::cell::RefCell;
-
 use crate::cmd::modulemap;
 use anyhow::{anyhow, bail, Context, Result};
 use camino_fs::Utf8PathBuf;
@@ -14,8 +12,6 @@ pub struct Configuration {
     pub lib_type: LibType,
     // Name of the library (used for the compiled artifacts)
     pub lib_name: String,
-    /// Name of the module, as defined in the modulemap. Used for naming the XCframework
-    module_name: RefCell<Option<String>>,
     /// Directory for all generated artifacts
     pub target_dir: Utf8PathBuf,
     /// Directory where the xcframework will be built
@@ -60,7 +56,6 @@ impl Configuration {
             cli,
             lib_type,
             lib_name: target.name.clone(),
-            module_name: RefCell::new(None),
             target_dir,
             build_dir,
         })
@@ -99,14 +94,7 @@ impl Configuration {
     }
 
     pub fn module_name(&self) -> Result<String> {
-        let name = self.module_name.borrow().clone();
-        if let Some(name) = name {
-            Ok(name)
-        } else {
-            let name = modulemap::get_module_name(self)?;
-            *self.module_name.borrow_mut() = Some(name.clone());
-            Ok(name)
-        }
+        modulemap::get_module_name(self)
     }
 
     pub fn profile(&self) -> &str {
