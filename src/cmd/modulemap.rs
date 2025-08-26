@@ -46,6 +46,6 @@ fn ls_modulemap_files(dir: &Utf8Path) -> Result<Vec<Utf8PathBuf>> {
     Ok(dir
         .ls()
         .files()
-        .filter(|path| path.extension().map_or(false, |ext| ext == "modulemap"))
+        .filter(|path| path.extension() == Some("modulemap"))
         .collect())
 }
