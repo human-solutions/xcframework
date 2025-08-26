@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 
 use super::Target;
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use camino_fs::*;
 use serde::Deserialize;
 use std::str::FromStr;
@@ -102,11 +102,7 @@ impl XCFrameworkConfiguration {
     ) -> Result<Self> {
         let mut me = serde_json::from_value::<Self>(section.clone())?;
         me.include_dir = package_dir.join(me.include_dir);
-        if validate {
-            me.validated()
-        } else {
-            Ok(me)
-        }
+        if validate { me.validated() } else { Ok(me) }
     }
 
     fn validated(self) -> Result<Self> {

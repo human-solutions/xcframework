@@ -1,7 +1,7 @@
 pub mod cargo;
 pub mod modulemap;
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use std::process::Command;
 use yansi::Paint;
 

@@ -1,5 +1,5 @@
 use crate::cmd::modulemap;
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{Context, Result, anyhow, bail};
 use camino_fs::Utf8PathBuf;
 use cargo_metadata::{Metadata, MetadataCommand, Package, TargetKind};
 
@@ -71,9 +71,9 @@ impl Configuration {
 
         let metadata = MetadataCommand::new().manifest_path(manifest_path).exec()?;
 
+        let workspace_packages = metadata.workspace_packages();
         let package = if let Some(package) = &cli.package {
-            metadata
-                .workspace_packages()
+            workspace_packages
                 .iter()
                 .find(|p| &p.name == package)
                 .ok_or(anyhow!("Could not find package '{package}'"))?

@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use anyhow::{Context, Ok};
 use camino_fs::*;
 use platform::ApplePlatform;
-use xshell::{cmd, Shell};
+use xshell::{Shell, cmd};
 
 pub mod platform;
 pub mod plist;

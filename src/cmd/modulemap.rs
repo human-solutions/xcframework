@@ -1,7 +1,7 @@
 use std::io;
 
 use crate::conf::Configuration;
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use camino_fs::*;
 use std::fs::File;
 
