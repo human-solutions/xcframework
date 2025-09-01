@@ -75,7 +75,7 @@ impl Configuration {
         let package = if let Some(package) = &cli.package {
             workspace_packages
                 .iter()
-                .find(|p| &p.name == package)
+                .find(|p| p.name.as_str() == package)
                 .ok_or(anyhow!("Could not find package '{package}'"))?
         } else {
             metadata
