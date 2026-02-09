@@ -190,7 +190,7 @@ pub fn compress_xcframework(
     };
     let dest = output_dir.join(zip_name);
     let source = xcframework_path;
-    zip_extensions::zip_create_from_directory(
+    zip_extensions::zip_writer::zip_create_from_directory(
         &dest.clone().into_std_path_buf(),
         &source.clone().into_std_path_buf(),
     )?;
