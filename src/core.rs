@@ -172,23 +172,16 @@ pub fn create_xcframework(
 
 /// Compress the XCFramework as a zip file.
 pub fn compress_xcframework(
-    xcframework_name: Option<String>,
     xcframework_path: &Utf8PathBuf,
-    prefix: Option<String>,
     output_dir: &Utf8PathBuf,
 ) -> anyhow::Result<Utf8PathBuf> {
     println!("📦 Compressing XCFramework ...");
 
-    let framework_name = xcframework_name
-        .clone()
-        .or_else(|| xcframework_path.file_name().map(Into::into))
+    let framework_name = xcframework_path
+        .file_name()
         .context("Missing xcframework name")?;
 
-    let zip_name = match &prefix {
-        Some(prefix) => format!("{prefix}_{}.zip", framework_name),
-        None => format!("{}.zip", framework_name),
-    };
-    let dest = output_dir.join(zip_name);
+    let dest = output_dir.join(format!("{}.zip", framework_name));
     let source = xcframework_path;
     zip_extensions::zip_writer::zip_create_from_directory(
         &dest.clone().into_std_path_buf(),

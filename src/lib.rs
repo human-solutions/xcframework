@@ -99,7 +99,7 @@ pub fn build(conf: &Configuration) -> Result<Produced> {
     let module_name = conf.module_name()?;
 
     let path = if conf.cargo_section.zip {
-        core::compress_xcframework(None, &xcframework_path, None, &conf.target_dir)?
+        core::compress_xcframework(&xcframework_path, &conf.target_dir)?
     } else {
         let to = conf.target_dir.join(format!("{module_name}.xcframework"));
         to.rm()?;
