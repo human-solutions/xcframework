@@ -49,6 +49,24 @@ pub fn lipo_create_platform_libraries(
     Ok(libs)
 }
 
+/// Query the SDK version for a platform using `xcrun --show-sdk-version`.
+fn query_sdk_version(sh: &Shell, platform: &ApplePlatform) -> String {
+    let sdk = platform.platform_name();
+    sh.cmd("xcrun")
+        .args(["--show-sdk-version", "--sdk", sdk])
+        .read()
+        .unwrap_or_default()
+        .trim()
+        .to_string()
+}
+
+/// Resolve the deployment target for a platform by checking the corresponding
+/// environment variable, falling back to the platform's default.
+fn resolve_deployment_target(platform: &ApplePlatform) -> String {
+    std::env::var(platform.deployment_target_env_var())
+        .unwrap_or_else(|_| platform.default_deployment_target().to_string())
+}
+
 /// Reference: [article](https://developer.apple.com/documentation/xcode/creating-a-multi-platform-binary-framework-bundle#Determine-the-architectures-a-binary-supports)
 ///
 /// Avoid using dynamic library files (.dylib files) for dynamic linking.
@@ -74,7 +92,10 @@ pub fn wrap_as_framework(
         .join(format!("{}{}", bundle_name, SUFFIX));
     output_path.mkdirs()?;
 
-    let plist = plist::InfoPlistBuilder::new(bundle_name, platform);
+    let sdk_version = query_sdk_version(&sh, &platform);
+    let min_os_version = resolve_deployment_target(&platform);
+
+    let plist = plist::InfoPlistBuilder::new(bundle_name, platform, sdk_version, min_os_version);
     let plist_path = output_path.join("Info.plist");
     plist.write(plist_path.as_str())?;
 
@@ -176,4 +197,65 @@ pub fn compress_xcframework(
 
     println!("✅ Compressed XCFramework success, output:\n{dest}");
     Ok(dest)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use platform::{Environment, EnvironmentWithoutCatalyst};
+
+    #[test]
+    fn resolve_deployment_target_uses_env_var() {
+        let platform = ApplePlatform::IOS(Environment::Device);
+        let env_var = platform.deployment_target_env_var();
+
+        // Save original value to restore later
+        let original = std::env::var(env_var).ok();
+
+        // SAFETY: test-only, single-threaded test runner
+        unsafe { std::env::set_var(env_var, "15.0") };
+        let result = resolve_deployment_target(&platform);
+        assert_eq!(result, "15.0");
+
+        // Restore original state
+        unsafe {
+            match original {
+                Some(val) => std::env::set_var(env_var, val),
+                None => std::env::remove_var(env_var),
+            }
+        }
+    }
+
+    #[test]
+    fn resolve_deployment_target_falls_back_to_default() {
+        let platform = ApplePlatform::WatchOS(EnvironmentWithoutCatalyst::Device);
+        let env_var = platform.deployment_target_env_var();
+
+        // Save original value to restore later
+        let original = std::env::var(env_var).ok();
+
+        // SAFETY: test-only, single-threaded test runner
+        unsafe { std::env::remove_var(env_var) };
+        let result = resolve_deployment_target(&platform);
+        assert_eq!(result, "5.0");
+
+        // Restore original state
+        if let Some(val) = original {
+            unsafe { std::env::set_var(env_var, val) };
+        }
+    }
+
+    #[test]
+    fn query_sdk_version_returns_version_string() {
+        let sh = Shell::new().unwrap();
+        let version = query_sdk_version(&sh, &ApplePlatform::MacOS);
+
+        // On a macOS dev machine with Xcode installed, this should return
+        // a non-empty version string like "15.0" or "14.2"
+        assert!(!version.is_empty(), "SDK version should not be empty");
+        assert!(
+            version.contains('.'),
+            "SDK version '{version}' should contain a dot"
+        );
+    }
 }

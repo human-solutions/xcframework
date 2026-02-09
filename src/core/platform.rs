@@ -75,6 +75,27 @@ impl ApplePlatform {
         }
     }
 
+    /// Returns the environment variable name for the deployment target of this platform.
+    pub fn deployment_target_env_var(&self) -> &'static str {
+        match self {
+            ApplePlatform::MacOS => "MACOSX_DEPLOYMENT_TARGET",
+            ApplePlatform::IOS(_) => "IPHONEOS_DEPLOYMENT_TARGET",
+            ApplePlatform::TvOS(_) => "TVOS_DEPLOYMENT_TARGET",
+            ApplePlatform::WatchOS(_) => "WATCHOS_DEPLOYMENT_TARGET",
+        }
+    }
+
+    /// Returns the default minimum deployment target for this platform,
+    /// matching the Rust compiler's defaults.
+    pub fn default_deployment_target(&self) -> &'static str {
+        match self {
+            ApplePlatform::MacOS => "10.12",
+            ApplePlatform::IOS(_) => "10.0",
+            ApplePlatform::TvOS(_) => "10.0",
+            ApplePlatform::WatchOS(_) => "5.0",
+        }
+    }
+
     // Reference: https://doc.rust-lang.org/rustc/platform-support.html
     pub fn rustup_targets(&self) -> Vec<&str> {
         match self {
@@ -97,5 +118,51 @@ impl ApplePlatform {
                 vec!["x86_64-apple-watchos", "aarch64-apple-tvos-sim"]
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn deployment_target_env_vars() {
+        assert_eq!(
+            ApplePlatform::MacOS.deployment_target_env_var(),
+            "MACOSX_DEPLOYMENT_TARGET"
+        );
+        assert_eq!(
+            ApplePlatform::IOS(Environment::Device).deployment_target_env_var(),
+            "IPHONEOS_DEPLOYMENT_TARGET"
+        );
+        assert_eq!(
+            ApplePlatform::IOS(Environment::Simulator).deployment_target_env_var(),
+            "IPHONEOS_DEPLOYMENT_TARGET"
+        );
+        assert_eq!(
+            ApplePlatform::TvOS(EnvironmentWithoutCatalyst::Device).deployment_target_env_var(),
+            "TVOS_DEPLOYMENT_TARGET"
+        );
+        assert_eq!(
+            ApplePlatform::WatchOS(EnvironmentWithoutCatalyst::Device).deployment_target_env_var(),
+            "WATCHOS_DEPLOYMENT_TARGET"
+        );
+    }
+
+    #[test]
+    fn default_deployment_targets() {
+        assert_eq!(ApplePlatform::MacOS.default_deployment_target(), "10.12");
+        assert_eq!(
+            ApplePlatform::IOS(Environment::Device).default_deployment_target(),
+            "10.0"
+        );
+        assert_eq!(
+            ApplePlatform::TvOS(EnvironmentWithoutCatalyst::Simulator).default_deployment_target(),
+            "10.0"
+        );
+        assert_eq!(
+            ApplePlatform::WatchOS(EnvironmentWithoutCatalyst::Device).default_deployment_target(),
+            "5.0"
+        );
     }
 }
