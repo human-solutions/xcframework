@@ -15,7 +15,7 @@ A Cargo plugin and library for building Apple XCFrameworks from Rust libraries
 # Features
 
 - Easily create Apple XCFrameworks from Rust libraries
-- Integrates into the cargo build process. Run it with `cargo xcframework` with parameters that are almost the same as for `cargo build`
+- Integrates into the cargo build process. Run it with `xcframework` with parameters that are almost the same as for `cargo build`
 - Configuration in `Cargo.toml` section `[package.metadata.xcframework]`
 - Currently supports building for iOS, macOS and simulators. If there is interest, watchOS and tvOS can be added as well.
 
@@ -33,7 +33,7 @@ If you for any reason needs the bleeding-edge super fresh version:
 
 Help:
 
-> `cargo xcframework --help`
+> `xcframework --help`
 
 For setting up your project, have a look at the [examples](https://github.com/akesson/cargo-xcframework/tree/main/examples)
 
@@ -75,7 +75,7 @@ lib-type = "staticlib"
 zip = false
 
 # Enable Cargo to compile the standard library itself as part of a crate graph compilation.
-# If enabled either run with `cargo +nightly xcframework`, set the default toolchain to nightly
+# If enabled either set the default toolchain to nightly
 # or set run `rustup override set nightly` in the project directory.
 #
 # Optional. Defaults to false. Requires nightly. Only useful for staticlib's, ignored for cdylibs.
