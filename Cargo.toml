@@ -1,6 +1,6 @@
 [package]
 name = "xcframework"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2024"
 license = "MIT"
 repository = "https://github.com/human-solutions/xcframework"
@@ -23,4 +23,4 @@ glob = "0.3"
 xflags = "0.3"
 
 [dev-dependencies]
-tempfile = "3.21"
+tempfile = "3.26"

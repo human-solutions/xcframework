@@ -1,7 +1,3 @@
-> <span style="color:darkorange">**⚠️ WARNING**</span>
->
-> This has not yet been thoroughly tested. Use at your own risk.
-
 A Cargo plugin and library for building Apple XCFrameworks from Rust libraries
 
  <br/>

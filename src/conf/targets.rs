@@ -2,14 +2,41 @@ use std::{fmt::Display, str::FromStr};
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 pub enum Target {
-    iOS_Device,
-    iOS_aarch_Simulator,
-    iOS_x86_Simulator,
-    macOS_aarch,
-    macOS_x86,
+    IosDevice,
+    IosSimArm64,
+    IosSimX86_64,
+    MacosArm64,
+    MacosX86_64,
+}
+
+impl<'de> Deserialize<'de> for Target {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        match s.as_str() {
+            "aarch64-apple-ios" | "iOS_Device" | "IosDevice" => Ok(Target::IosDevice),
+            "aarch64-apple-ios-sim" | "iOS_aarch_Simulator" | "IosSimArm64" => {
+                Ok(Target::IosSimArm64)
+            }
+            "x86_64-apple-ios" | "iOS_x86_Simulator" | "IosSimX86_64" => Ok(Target::IosSimX86_64),
+            "aarch64-apple-darwin" | "macOS_aarch" | "MacosArm64" => Ok(Target::MacosArm64),
+            "x86_64-apple-darwin" | "macOS_x86" | "MacosX86_64" => Ok(Target::MacosX86_64),
+            _ => Err(serde::de::Error::unknown_variant(
+                &s,
+                &[
+                    "aarch64-apple-ios",
+                    "aarch64-apple-ios-sim",
+                    "x86_64-apple-ios",
+                    "aarch64-apple-darwin",
+                    "x86_64-apple-darwin",
+                ],
+            )),
+        }
+    }
 }
 
 impl FromStr for Target {
@@ -17,11 +44,11 @@ impl FromStr for Target {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "aarch64-apple-ios-sim" => Ok(Target::iOS_aarch_Simulator),
-            "x86_64-apple-ios" => Ok(Target::iOS_x86_Simulator),
-            "aarch64-apple-ios" => Ok(Target::iOS_Device),
-            "x86_64-apple-darwin" => Ok(Target::macOS_x86),
-            "aarch64-apple-darwin" => Ok(Target::macOS_aarch),
+            "aarch64-apple-ios-sim" => Ok(Target::IosSimArm64),
+            "x86_64-apple-ios" => Ok(Target::IosSimX86_64),
+            "aarch64-apple-ios" => Ok(Target::IosDevice),
+            "x86_64-apple-darwin" => Ok(Target::MacosX86_64),
+            "aarch64-apple-darwin" => Ok(Target::MacosArm64),
             _ => Err(format!("Unknown target: {s}")),
         }
     }
@@ -29,21 +56,21 @@ impl FromStr for Target {
 
 impl Target {
     pub fn default_macos() -> Vec<Target> {
-        vec![Target::macOS_x86, Target::macOS_aarch]
+        vec![Target::MacosX86_64, Target::MacosArm64]
     }
     pub fn default_ios() -> Vec<Target> {
-        vec![Target::iOS_Device]
+        vec![Target::IosDevice]
     }
     pub fn default_ios_sim() -> Vec<Target> {
-        vec![Target::iOS_aarch_Simulator, Target::iOS_x86_Simulator]
+        vec![Target::IosSimArm64, Target::IosSimX86_64]
     }
     pub fn as_str(&self) -> &'static str {
         match self {
-            Target::iOS_Device => "aarch64-apple-ios",
-            Target::iOS_aarch_Simulator => "aarch64-apple-ios-sim",
-            Target::iOS_x86_Simulator => "x86_64-apple-ios",
-            Target::macOS_aarch => "aarch64-apple-darwin",
-            Target::macOS_x86 => "x86_64-apple-darwin",
+            Target::IosDevice => "aarch64-apple-ios",
+            Target::IosSimArm64 => "aarch64-apple-ios-sim",
+            Target::IosSimX86_64 => "x86_64-apple-ios",
+            Target::MacosArm64 => "aarch64-apple-darwin",
+            Target::MacosX86_64 => "x86_64-apple-darwin",
         }
     }
 }
