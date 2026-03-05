@@ -22,9 +22,7 @@ impl<'de> Deserialize<'de> for Target {
             "aarch64-apple-ios-sim" | "iOS_aarch_Simulator" | "IosSimArm64" => {
                 Ok(Target::IosSimArm64)
             }
-            "x86_64-apple-ios" | "iOS_x86_Simulator" | "IosSimX86_64" => {
-                Ok(Target::IosSimX86_64)
-            }
+            "x86_64-apple-ios" | "iOS_x86_Simulator" | "IosSimX86_64" => Ok(Target::IosSimX86_64),
             "aarch64-apple-darwin" | "macOS_aarch" | "MacosArm64" => Ok(Target::MacosArm64),
             "x86_64-apple-darwin" | "macOS_x86" | "MacosX86_64" => Ok(Target::MacosX86_64),
             _ => Err(serde::de::Error::unknown_variant(
