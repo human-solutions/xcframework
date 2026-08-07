@@ -109,7 +109,7 @@ pub fn wrap_as_framework(
         ])
         .run()?;
 
-    let to_binary = format!("{}/{}", &output_path, bundle_name);
+    let to_binary = format!("{}/{}", output_path, bundle_name);
     lib_path.cp(to_binary)?;
 
     if let CrateType::Cdylib = crate_type {
@@ -117,7 +117,7 @@ pub fn wrap_as_framework(
             .args([
                 "-id",
                 &format!("@rpath/{}.framework/{}", bundle_name, bundle_name),
-                &format!("{}/{}", &output_path, bundle_name),
+                &format!("{}/{}", output_path, bundle_name),
             ])
             .output()?;
     }
